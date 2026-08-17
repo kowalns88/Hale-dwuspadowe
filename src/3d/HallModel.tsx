@@ -318,15 +318,16 @@ export const HallModel = React.memo(function HallModel({ params, results, claddi
       )}
 
       {/* Building edge lines for architectural silhouette */}
-      <BuildingEdgeLines
-        span={span}
-        hallLength={hallLength}
-        wallHeight={effectiveColumnHeight}
-        roofAngle={roofAngle}
-        ridgeHeight={effectiveRidgeHeight}
-        columnOuterFlangeOffset={columnOuterFlangeOffset}
-        endColumnOuterOffset={endColumnOuterOffset}
-      />
+      {(showCladding ?? true) && (
+        <BuildingEdgeLines
+          span={span}
+          hallLength={hallLength}
+          wallHeight={effectiveColumnHeight}
+          ridgeHeight={effectiveRidgeHeight}
+          columnOuterFlangeOffset={columnOuterFlangeOffset}
+          endColumnOuterOffset={endColumnOuterOffset}
+        />
+      )}
 
       {/* Openings (gates, doors, windows) */}
       {openings && openings.length > 0 && (

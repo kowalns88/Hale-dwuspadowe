@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
-import { EffectComposer, N8AO, ToneMapping, SMAA, Vignette } from '@react-three/postprocessing'
+import { EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
 import { HallModel } from './HallModel'
 import type { HallParameters, CalculationResults, CladdingParameters, Opening, OpeningType, SkylightParameters, SelectedSheet } from '../types'
@@ -76,7 +76,6 @@ function SceneContent(props: SceneProps) {
       <EffectComposer multisampling={8}>
         <N8AO aoRadius={0.5} intensity={3.0} distanceFalloff={0.5} />
         <ToneMapping mode={ToneMappingMode.AGX} />
-        <SMAA />
         <Vignette offset={0.3} darkness={0.4} />
       </EffectComposer>
     </>

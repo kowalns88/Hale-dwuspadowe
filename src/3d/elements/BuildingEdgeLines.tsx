@@ -1,11 +1,10 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 interface BuildingEdgeLinesProps {
   span: number;
   hallLength: number;
   wallHeight: number;
-  roofAngle: number;
   ridgeHeight: number;
   columnOuterFlangeOffset: number;
   endColumnOuterOffset: number;
@@ -26,11 +25,12 @@ export function BuildingEdgeLines({
   span,
   hallLength,
   wallHeight,
-  roofAngle,
   ridgeHeight,
   columnOuterFlangeOffset,
   endColumnOuterOffset,
 }: BuildingEdgeLinesProps) {
+  const geometryRef = useRef<THREE.BufferGeometry | null>(null);
+
   const geometry = useMemo(() => {
     // Offsets: place edge lines slightly outside cladding surface (~20mm beyond column flange)
     const sideOffset = columnOuterFlangeOffset + 0.05;
@@ -45,9 +45,6 @@ export function BuildingEdgeLines({
     const yEave = wallHeight;
     const yRidge = ridgeHeight;
     const zMid = span / 2;               // ridge is at mid-span
-
-    // ridgeHeight already encodes the roof angle
-    void roofAngle;
 
     const points: number[] = [];
 
@@ -85,7 +82,15 @@ export function BuildingEdgeLines({
     const geom = new THREE.BufferGeometry();
     geom.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
     return geom;
-  }, [span, hallLength, wallHeight, ridgeHeight, columnOuterFlangeOffset, endColumnOuterOffset, roofAngle]);
+  }, [span, hallLength, wallHeight, ridgeHeight, columnOuterFlangeOffset, endColumnOuterOffset]);
+
+  // Dispose previous geometry when dependencies change or on unmount
+  useEffect(() => {
+    geometryRef.current = geometry;
+    return () => {
+      geometryRef.current?.dispose();
+    };
+  }, [geometry]);
 
   return (
     <lineSegments geometry={geometry}>
