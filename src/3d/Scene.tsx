@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
 import { HallModel } from './HallModel'
@@ -28,9 +28,7 @@ function SceneContent(props: SceneProps) {
 
   return (
     <>
-      <Environment preset="city" />
-
-      <ambientLight intensity={0.2} />
+      <ambientLight intensity={0.3} />
       <directionalLight
         position={[40, 60, 30]}
         intensity={2.0}
@@ -45,21 +43,16 @@ function SceneContent(props: SceneProps) {
         shadow-bias={-0.0002}
         color="#ffffff"
       />
-      <directionalLight position={[-20, 30, -20]} intensity={0.5} color="#e8e8ff" />
-      <hemisphereLight args={['#c0d0e0', '#506040', 0.4]} />
+      {/* Warm fill light from opposite side */}
+      <directionalLight position={[-30, 40, -20]} intensity={0.8} color="#fff0e0" />
+      {/* Rim light from behind to highlight edges */}
+      <directionalLight position={[0, 20, -50]} intensity={1.2} color="#e0e8ff" />
+      <hemisphereLight args={['#c0d0e0', '#506040', 0.5]} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
         <planeGeometry args={[200, 200]} />
         <meshStandardMaterial color="#a8b8a0" roughness={0.95} metalness={0} />
       </mesh>
-
-      <ContactShadows
-        position={[0, -0.01, 0]}
-        opacity={0.6}
-        blur={2.5}
-        far={50}
-        resolution={1024}
-      />
 
       <HallModel params={params} results={results} selectedSheet={_selectedSheet} onSelectSheet={_onSelectSheet} {...rest} />
 

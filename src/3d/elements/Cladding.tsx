@@ -35,7 +35,6 @@ function makeCladdingMaterial(ralCode: string): THREE.MeshStandardMaterial {
     depthWrite: true,
     metalness: 0.15,
     roughness: 0.6,
-    envMapIntensity: 0.8,
   });
 }
 
