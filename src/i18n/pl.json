@@ -50,13 +50,13 @@
     },
     "unit": {
       "meters": "m",
-      "degrees": "\u00b0"
+      "degrees": "°"
     },
     "range": {
       "span": "10-30 m",
       "length": "20-100 m",
       "wallHeight": "4-10 m",
-      "roofAngle": "5\u00b0-25\u00b0"
+      "roofAngle": "5°-25°"
     },
     "steelGrades": {
       "S235": "S235",
@@ -287,5 +287,24 @@
     "costPerM2": "Koszt na m2 zabudowy",
     "steelMassPerM2": "Masa stali na m2",
     "breakdown": "Rozklad kosztow"
+  },
+  "sheetBill": {
+    "title": "Zestawienie blach/plyt",
+    "columns": {
+      "type": "Typ",
+      "thickness": "Grubosc",
+      "module": "Modul",
+      "length": "Dlugosc",
+      "count": "Ilosc",
+      "pcs": "szt."
+    },
+    "totalWallSurface": "Laczna powierzchnia plyt sciennych (brutto)",
+    "totalRoofSurface": "Laczna powierzchnia plyt dachowych (brutto)",
+    "types": {
+      "sandwichWall": "Plyta scienna sandwich",
+      "sandwichRoof": "Plyta dachowa sandwich",
+      "trapezoidT18": "Blacha trapezowa T18",
+      "trapezoidT35": "Blacha trapezowa T35"
+    }
   }
 }

@@ -6,6 +6,7 @@ import { CladdingPanel } from './CladdingPanel';
 import { OpeningsPanel } from './OpeningsPanel';
 import { SkylightPanel } from './SkylightPanel';
 import { PricingPanel } from './PricingPanel';
+import { SheetBillPanel } from './SheetBillPanel';
 import type { PricingData } from '../data/pricing';
 import type { PricingResult } from '../utils/pricing';
 
@@ -527,6 +528,16 @@ export function FormPanel({ params, onParamsChange, results, profileOverrides, o
                 />
               </>
             )}
+            {cladding && (
+              <>
+                <div className="my-3 border-t border-border" />
+                <SheetBillPanel
+                  params={params}
+                  cladding={cladding}
+                  results={results}
+                />
+              </>
+            )}
           </>
         ) : (
           <>
@@ -584,6 +595,16 @@ export function FormPanel({ params, onParamsChange, results, profileOverrides, o
                   pricing={pricing}
                   onPricingChange={onPricingChange}
                   pricingResult={pricingResult}
+                />
+              </>
+            )}
+            {cladding && (
+              <>
+                <div className="my-3 border-t border-border" />
+                <SheetBillPanel
+                  params={params}
+                  cladding={cladding}
+                  results={results}
                 />
               </>
             )}

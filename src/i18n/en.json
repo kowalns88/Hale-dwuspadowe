@@ -50,13 +50,13 @@
     },
     "unit": {
       "meters": "m",
-      "degrees": "\u00b0"
+      "degrees": "°"
     },
     "range": {
       "span": "10-30 m",
       "length": "20-100 m",
       "wallHeight": "4-10 m",
-      "roofAngle": "5\u00b0-25\u00b0"
+      "roofAngle": "5°-25°"
     },
     "steelGrades": {
       "S235": "S235",
@@ -287,5 +287,24 @@
     "costPerM2": "Cost per m2 of floor",
     "steelMassPerM2": "Steel mass per m2",
     "breakdown": "Cost breakdown"
+  },
+  "sheetBill": {
+    "title": "Sheet/panel bill of materials",
+    "columns": {
+      "type": "Type",
+      "thickness": "Thickness",
+      "module": "Module",
+      "length": "Length",
+      "count": "Quantity",
+      "pcs": "pcs"
+    },
+    "totalWallSurface": "Total wall panel surface (gross)",
+    "totalRoofSurface": "Total roof panel surface (gross)",
+    "types": {
+      "sandwichWall": "Wall sandwich panel",
+      "sandwichRoof": "Roof sandwich panel",
+      "trapezoidT18": "Trapezoidal sheet T18",
+      "trapezoidT35": "Trapezoidal sheet T35"
+    }
   }
 }
