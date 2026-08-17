@@ -107,6 +107,10 @@ export const HallModel = React.memo(function HallModel({ params, results, claddi
   const sideWallThicknessOffset = isSideWallTrapezoid
     ? 0.018 // T18 profile height default for trapezoid walls
     : ((cladding?.sandwichThickness ?? 100) / 1000) / 2;
+  const isEndWallTrapezoid = cladding?.endWallType === 'trapezoid';
+  const endWallThicknessOffset = isEndWallTrapezoid
+    ? 0.018 // T18 profile height default for trapezoid walls
+    : ((cladding?.sandwichThickness ?? 100) / 1000) / 2;
   const wallZOffset = columnOuterFlangeOffset + sideWallThicknessOffset;
 
   return (
@@ -323,9 +327,13 @@ export const HallModel = React.memo(function HallModel({ params, results, claddi
           span={span}
           hallLength={hallLength}
           wallHeight={wallHeight}
-          ridgeHeight={wallHeight + (span / 2) * Math.tan((roofAngle * Math.PI) / 180)}
+          roofAngle={roofAngle}
           columnOuterFlangeOffset={columnOuterFlangeOffset}
           endColumnOuterOffset={endColumnOuterOffset}
+          sideWallThicknessOffset={sideWallThicknessOffset}
+          endWallThicknessOffset={endWallThicknessOffset}
+          flashingColor={cladding?.flashingColor ?? 'RAL 7016'}
+          eaveOverhang={(cladding?.eaveOverhang ?? 300) / 1000}
         />
       )}
 

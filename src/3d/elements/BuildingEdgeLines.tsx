@@ -1,176 +1,320 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import * as THREE from 'three';
+import { getRALHex } from '../../data/colors';
 
 interface BuildingEdgeLinesProps {
   span: number;
   hallLength: number;
   wallHeight: number;
-  ridgeHeight: number;
+  roofAngle: number; // degrees
   columnOuterFlangeOffset: number;
   endColumnOuterOffset: number;
+  sideWallThicknessOffset: number;
+  endWallThicknessOffset: number;
+  flashingColor: string; // RAL code
+  eaveOverhang: number; // meters
+}
+
+// Flashing dimensions (meters)
+const RIDGE_CAP_WIDTH = 0.100; // 100mm per side (200mm total)
+const RIDGE_CAP_THICKNESS = 0.003; // 3mm thick
+
+const EAVE_VERTICAL_LEG = 0.100; // 100mm
+const EAVE_HORIZONTAL_LEG = 0.050; // 50mm
+const EAVE_THICKNESS = 0.002; // 2mm
+
+const CORNER_LEG = 0.050; // 50mm per leg
+const CORNER_THICKNESS = 0.002; // 2mm
+
+const GABLE_LEG_A = 0.050; // 50mm
+const GABLE_LEG_B = 0.050; // 50mm
+const GABLE_THICKNESS = 0.002; // 2mm
+
+/**
+ * Creates a V-shaped cross-section shape for ridge cap flashing.
+ * The V opens downward, matching the roof angle.
+ */
+function createRidgeCapShape(roofAngleRad: number): THREE.Shape {
+  const shape = new THREE.Shape();
+  const halfWidth = RIDGE_CAP_WIDTH;
+  const t = RIDGE_CAP_THICKNESS;
+
+  // V-shape: two legs meeting at center, opening downward
+  // Left leg goes from center downward-left at roof angle
+  // Right leg goes from center downward-right at roof angle
+  const leftDx = -halfWidth * Math.cos(roofAngleRad);
+  const leftDy = -halfWidth * Math.sin(roofAngleRad);
+  const rightDx = halfWidth * Math.cos(roofAngleRad);
+  const rightDy = -halfWidth * Math.sin(roofAngleRad);
+
+  // Outer V (top surface)
+  shape.moveTo(0, 0); // apex
+  shape.lineTo(leftDx, leftDy); // left tip outer
+  // Offset inward by thickness (perpendicular to the leg surface)
+  const normalLeftX = Math.sin(roofAngleRad);
+  const normalLeftY = -Math.cos(roofAngleRad);
+  shape.lineTo(leftDx - normalLeftX * t, leftDy - normalLeftY * t);
+  // Inner apex
+  shape.lineTo(0, -t / Math.cos(roofAngleRad));
+  // Inner right
+  const normalRightX = -Math.sin(roofAngleRad);
+  const normalRightY = -Math.cos(roofAngleRad);
+  shape.lineTo(rightDx - normalRightX * t, rightDy - normalRightY * t);
+  // Right tip outer
+  shape.lineTo(rightDx, rightDy);
+  shape.lineTo(0, 0); // close
+
+  return shape;
 }
 
 /**
- * Renders dark silhouette edge lines at building envelope boundaries
- * using actual 3D mesh geometry (thin cylinders ~18mm thick) for visibility.
- * WebGL lineSegments always render at 1px regardless of linewidth,
- * so we use CylinderGeometry tubes instead for proper architectural edge visualization.
- *
- * Lines mark:
- * - 4 vertical corner edges
- * - 2 eave lines along building length (both sides)
- * - Ridge line along building length
- * - 4 gable roof slope edges (2 per gable end)
- * - Bottom perimeter edges along ground
+ * Creates an L-shaped cross-section shape for eave trims.
+ * Vertical leg goes down, horizontal leg goes outward.
  */
+function createEaveTrimShape(): THREE.Shape {
+  const shape = new THREE.Shape();
+  const vLeg = EAVE_VERTICAL_LEG;
+  const hLeg = EAVE_HORIZONTAL_LEG;
+  const t = EAVE_THICKNESS;
 
-const EDGE_THICKNESS = 0.025; // 25mm diameter tubes
-const EDGE_COLOR = '#1a1a1a';
-const RADIAL_SEGMENTS = 4; // Low poly for performance (square-ish tubes)
+  // Start at top-left corner of vertical leg
+  shape.moveTo(0, 0);
+  shape.lineTo(t, 0);
+  shape.lineTo(t, -(vLeg - t));
+  shape.lineTo(hLeg, -(vLeg - t));
+  shape.lineTo(hLeg, -vLeg);
+  shape.lineTo(0, -vLeg);
+  shape.lineTo(0, 0);
 
-interface EdgeSegment {
-  start: THREE.Vector3;
-  end: THREE.Vector3;
+  return shape;
 }
 
-function EdgeTube({ start, end, geometry, material }: {
-  start: THREE.Vector3;
-  end: THREE.Vector3;
-  geometry: THREE.CylinderGeometry;
-  material: THREE.MeshStandardMaterial;
-}) {
-  const { position, quaternion, scaleY } = useMemo(() => {
-    const direction = new THREE.Vector3().subVectors(end, start);
-    const length = direction.length();
-    const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+/**
+ * Creates an L-shaped cross-section for corner trims.
+ * Two equal legs at 90 degrees.
+ */
+function createCornerTrimShape(): THREE.Shape {
+  const shape = new THREE.Shape();
+  const leg = CORNER_LEG;
+  const t = CORNER_THICKNESS;
 
-    // CylinderGeometry is oriented along Y axis by default
-    // We need to rotate it to align with the direction vector
-    const up = new THREE.Vector3(0, 1, 0);
-    const quat = new THREE.Quaternion();
-    const dir = direction.clone().normalize();
+  // L shape: vertical leg up, horizontal leg right
+  shape.moveTo(0, 0);
+  shape.lineTo(leg, 0);
+  shape.lineTo(leg, t);
+  shape.lineTo(t, t);
+  shape.lineTo(t, leg);
+  shape.lineTo(0, leg);
+  shape.lineTo(0, 0);
 
-    // If direction is exactly (anti-)parallel to up, handle edge case
-    if (Math.abs(dir.dot(up)) > 0.9999) {
-      if (dir.y < 0) {
-        quat.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
-      }
-    } else {
-      quat.setFromUnitVectors(up, dir);
-    }
-
-    return {
-      position: midpoint,
-      quaternion: quat,
-      scaleY: length,
-    };
-  }, [start, end]);
-
-  return (
-    <mesh
-      position={[position.x, position.y, position.z]}
-      quaternion={quaternion}
-      scale={[1, scaleY, 1]}
-      geometry={geometry}
-      material={material}
-    />
-  );
+  return shape;
 }
 
-export function BuildingEdgeLines({
+/**
+ * Creates an L-shaped cross-section for gable edge trims.
+ */
+function createGableEdgeTrimShape(): THREE.Shape {
+  const shape = new THREE.Shape();
+  const legA = GABLE_LEG_A;
+  const legB = GABLE_LEG_B;
+  const t = GABLE_THICKNESS;
+
+  shape.moveTo(0, 0);
+  shape.lineTo(legA, 0);
+  shape.lineTo(legA, t);
+  shape.lineTo(t, t);
+  shape.lineTo(t, legB);
+  shape.lineTo(0, legB);
+  shape.lineTo(0, 0);
+
+  return shape;
+}
+
+/**
+ * Renders architectural sheet metal flashings (obrobki blacharskie) at building edges:
+ * - Ridge cap (kalenica): V-shaped along ridge
+ * - Eave trims (okap): L-shaped along both eaves
+ * - Corner trims (narozniki): L-shaped vertical strips at 4 corners
+ * - Gable edge trims: L-shaped along roof slope edges on gable ends
+ */
+export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
   span,
   hallLength,
   wallHeight,
-  ridgeHeight,
+  roofAngle,
   columnOuterFlangeOffset,
   endColumnOuterOffset,
+  sideWallThicknessOffset,
+  endWallThicknessOffset,
+  flashingColor,
+  eaveOverhang,
 }: BuildingEdgeLinesProps) {
-  // Shared geometry and material for all edge tubes (performance optimization)
-  const sharedGeometry = useMemo(() => {
-    // Unit height cylinder (height=1), will be scaled per segment
-    const geo = new THREE.CylinderGeometry(
-      EDGE_THICKNESS / 2,
-      EDGE_THICKNESS / 2,
-      1,
-      RADIAL_SEGMENTS,
-      1
-    );
-    return geo;
-  }, []);
+  const roofAngleRad = (roofAngle * Math.PI) / 180;
 
-  const sharedMaterial = useMemo(() => {
+  // Material for all flashings
+  const material = useMemo(() => {
     return new THREE.MeshStandardMaterial({
-      color: EDGE_COLOR,
-      roughness: 0.8,
-      metalness: 0.1,
+      color: getRALHex(flashingColor),
+      metalness: 0.4,
+      roughness: 0.5,
+      side: THREE.DoubleSide,
     });
-  }, []);
+  }, [flashingColor]);
 
-  const segments: EdgeSegment[] = useMemo(() => {
-    // Offsets: place edge lines slightly outside cladding surface (~20mm beyond column flange)
-    const sideOffset = columnOuterFlangeOffset + 0.15;
-    const endOffset = endColumnOuterOffset + 0.15;
+  // Key coordinates
+  const sideOffset = columnOuterFlangeOffset + sideWallThicknessOffset;
+  const endOffset = endColumnOuterOffset + endWallThicknessOffset;
 
-    // Key coordinates
-    const xMin = -endOffset;             // front end wall (just outside)
-    const xMax = hallLength + endOffset;  // back end wall (just outside)
-    const zMin = -sideOffset;             // left side wall (just outside)
-    const zMax = span + sideOffset;       // right side wall (just outside)
-    const yBottom = 0;
-    const yEave = wallHeight;
-    const yRidge = ridgeHeight;
-    const zMid = span / 2;               // ridge is at mid-span
+  // Wall boundaries
+  const xMin = -endOffset;
+  const xMax = hallLength + endOffset;
+  const zMin = -sideOffset;
+  const zMax = span + sideOffset;
 
-    const edges: EdgeSegment[] = [];
+  // Eave trim length covers entire building length including end wall offsets
+  const eaveTrimLength = xMax - xMin;
 
-    function addLine(x1: number, y1: number, z1: number, x2: number, y2: number, z2: number) {
-      edges.push({
-        start: new THREE.Vector3(x1, y1, z1),
-        end: new THREE.Vector3(x2, y2, z2),
-      });
-    }
+  // Roof geometry
+  const ridgeY = wallHeight + (span / 2) * Math.tan(roofAngleRad);
+  const ridgeZ = span / 2;
+  const roofSlopeLength = (span / 2) / Math.cos(roofAngleRad);
 
-    // === 4 Vertical corner edges ===
-    addLine(xMin, yBottom, zMin, xMin, yEave, zMin); // front-left
-    addLine(xMax, yBottom, zMin, xMax, yEave, zMin); // back-left
-    addLine(xMin, yBottom, zMax, xMin, yEave, zMax); // front-right
-    addLine(xMax, yBottom, zMax, xMax, yEave, zMax); // back-right
+  // Ridge cap length extends the full building length
+  const ridgeCapLength = eaveTrimLength;
 
-    // === 2 Eave lines along building length (both sides) ===
-    addLine(xMin, yEave, zMin, xMax, yEave, zMin); // left eave
-    addLine(xMin, yEave, zMax, xMax, yEave, zMax); // right eave
+  // ===== Ridge Cap Geometry =====
+  const ridgeCapGeometry = useMemo(() => {
+    const shape = createRidgeCapShape(roofAngleRad);
+    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
+      steps: 1,
+      depth: ridgeCapLength,
+      bevelEnabled: false,
+    };
+    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  }, [roofAngleRad, ridgeCapLength]);
 
-    // === Ridge line along building length ===
-    addLine(xMin, yRidge, zMid, xMax, yRidge, zMid);
+  // ===== Eave Trim Geometry =====
+  const eaveTrimGeometry = useMemo(() => {
+    const shape = createEaveTrimShape();
+    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
+      steps: 1,
+      depth: eaveTrimLength,
+      bevelEnabled: false,
+    };
+    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  }, [eaveTrimLength]);
 
-    // === 4 Gable roof slope edges (2 per gable end) ===
-    // Front gable (x = xMin)
-    addLine(xMin, yEave, zMin, xMin, yRidge, zMid); // front left slope
-    addLine(xMin, yEave, zMax, xMin, yRidge, zMid); // front right slope
-    // Back gable (x = xMax)
-    addLine(xMax, yEave, zMin, xMax, yRidge, zMid); // back left slope
-    addLine(xMax, yEave, zMax, xMax, yRidge, zMid); // back right slope
+  // ===== Corner Trim Geometry =====
+  const cornerTrimGeometry = useMemo(() => {
+    const shape = createCornerTrimShape();
+    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
+      steps: 1,
+      depth: wallHeight,
+      bevelEnabled: false,
+    };
+    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  }, [wallHeight]);
 
-    // === Bottom perimeter edges along ground ===
-    addLine(xMin, yBottom, zMin, xMax, yBottom, zMin); // left bottom
-    addLine(xMin, yBottom, zMax, xMax, yBottom, zMax); // right bottom
-    addLine(xMin, yBottom, zMin, xMin, yBottom, zMax); // front bottom
-    addLine(xMax, yBottom, zMin, xMax, yBottom, zMax); // back bottom
-
-    return edges;
-  }, [span, hallLength, wallHeight, ridgeHeight, columnOuterFlangeOffset, endColumnOuterOffset]);
+  // ===== Gable Edge Trim Geometry =====
+  const gableEdgeTrimGeometry = useMemo(() => {
+    const shape = createGableEdgeTrimShape();
+    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
+      steps: 1,
+      depth: roofSlopeLength + eaveOverhang,
+      bevelEnabled: false,
+    };
+    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  }, [roofSlopeLength, eaveOverhang]);
 
   return (
     <group>
-      {segments.map((seg, i) => (
-        <EdgeTube
-          key={i}
-          start={seg.start}
-          end={seg.end}
-          geometry={sharedGeometry}
-          material={sharedMaterial}
-        />
-      ))}
+      {/* ===== Ridge Cap (kalenica) ===== */}
+      {/* V-shaped flashing along the ridge, extruded along X axis */}
+      <mesh
+        geometry={ridgeCapGeometry}
+        material={material}
+        position={[xMin, ridgeY, ridgeZ]}
+        rotation={[0, 0, 0]}
+      />
+
+      {/* ===== Eave Trims (okap) ===== */}
+      {/* Left eave (Z = zMin side) - L-shape with vertical leg going down, horizontal leg outward */}
+      <mesh
+        geometry={eaveTrimGeometry}
+        material={material}
+        position={[xMin, wallHeight, zMin]}
+        rotation={[Math.PI / 2, 0, 0]}
+      />
+      {/* Right eave (Z = zMax side) - mirrored */}
+      <mesh
+        geometry={eaveTrimGeometry}
+        material={material}
+        position={[xMin, wallHeight, zMax]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={[1, 1, 1]}
+      />
+
+      {/* ===== Corner Trims (narozniki) ===== */}
+      {/* Front-left corner */}
+      <mesh
+        geometry={cornerTrimGeometry}
+        material={material}
+        position={[xMin, 0, zMin]}
+        rotation={[Math.PI / 2, 0, 0]}
+      />
+      {/* Front-right corner */}
+      <mesh
+        geometry={cornerTrimGeometry}
+        material={material}
+        position={[xMin, 0, zMax]}
+        rotation={[Math.PI / 2, 0, Math.PI / 2]}
+      />
+      {/* Back-left corner */}
+      <mesh
+        geometry={cornerTrimGeometry}
+        material={material}
+        position={[xMax, 0, zMin]}
+        rotation={[Math.PI / 2, 0, -Math.PI / 2]}
+      />
+      {/* Back-right corner */}
+      <mesh
+        geometry={cornerTrimGeometry}
+        material={material}
+        position={[xMax, 0, zMax]}
+        rotation={[Math.PI / 2, 0, Math.PI]}
+      />
+
+      {/* ===== Gable Edge Trims (krawedzie szczytowe) ===== */}
+      {/* Front gable - left slope (from eave at zMin up to ridge) */}
+      <mesh
+        geometry={gableEdgeTrimGeometry}
+        material={material}
+        position={[xMin, wallHeight, zMin - eaveOverhang * Math.cos(roofAngleRad)]}
+        rotation={[roofAngleRad, 0, 0]}
+      />
+      {/* Front gable - right slope (from eave at zMax up to ridge) */}
+      <mesh
+        geometry={gableEdgeTrimGeometry}
+        material={material}
+        position={[xMin, wallHeight, zMax + eaveOverhang * Math.cos(roofAngleRad)]}
+        rotation={[-roofAngleRad, 0, 0]}
+        scale={[1, -1, 1]}
+      />
+      {/* Back gable - left slope */}
+      <mesh
+        geometry={gableEdgeTrimGeometry}
+        material={material}
+        position={[xMax, wallHeight, zMin - eaveOverhang * Math.cos(roofAngleRad)]}
+        rotation={[roofAngleRad, 0, 0]}
+      />
+      {/* Back gable - right slope */}
+      <mesh
+        geometry={gableEdgeTrimGeometry}
+        material={material}
+        position={[xMax, wallHeight, zMax + eaveOverhang * Math.cos(roofAngleRad)]}
+        rotation={[-roofAngleRad, 0, 0]}
+        scale={[1, -1, 1]}
+      />
     </group>
   );
-}
+});
