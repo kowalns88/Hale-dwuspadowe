@@ -535,6 +535,7 @@ export function FormPanel({ params, onParamsChange, results, profileOverrides, o
                   params={params}
                   cladding={cladding}
                   results={results}
+                  openings={openings}
                 />
               </>
             )}
@@ -605,6 +606,7 @@ export function FormPanel({ params, onParamsChange, results, profileOverrides, o
                   params={params}
                   cladding={cladding}
                   results={results}
+                  openings={openings}
                 />
               </>
             )}

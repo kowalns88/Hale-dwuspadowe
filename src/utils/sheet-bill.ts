@@ -1,4 +1,4 @@
-import type { HallParameters, CladdingParameters, CalculationResults } from '../types';
+import type { HallParameters, CladdingParameters, CalculationResults, Opening } from '../types';
 
 export interface SheetBillItem {
   type: string; // i18n key for the panel type
@@ -45,14 +45,119 @@ function computeSheetSizes(availableDimension: number, moduleWidth: number): num
 }
 
 /**
+ * Compute gate-aware end wall column Z positions.
+ * Replicates Cladding.tsx logic: incorporates gate jamb positions and adds filler columns.
+ */
+function computeEndColPositionsForWall(
+  span: number,
+  gates: Opening[],
+  uniformPositions: number[],
+  isFront: boolean,
+): number[] {
+  if (gates.length === 0) return uniformPositions;
+
+  const positions = new Set<number>([0, span]);
+
+  // Add gate jamb positions
+  for (const gate of gates) {
+    const centerZ = isFront ? (span - gate.positionX) : gate.positionX;
+    const leftJamb = centerZ - gate.width / 2;
+    const rightJamb = centerZ + gate.width / 2;
+    if (leftJamb > 0.01 && leftJamb < span - 0.01) positions.add(leftJamb);
+    if (rightJamb > 0.01 && rightJamb < span - 0.01) positions.add(rightJamb);
+  }
+
+  // Add filler columns between boundaries (same logic as Cladding.tsx EndColumns)
+  const sorted = [...positions].sort((a, b) => a - b);
+  const fillerPositions: number[] = [];
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const leftZ = sorted[i];
+    const rightZ = sorted[i + 1];
+    const gap = rightZ - leftZ;
+    // Check if this gap IS the gate span (skip filler inside gate)
+    const isGateSpan = gates.some((gate) => {
+      const centerZ = isFront ? (span - gate.positionX) : gate.positionX;
+      const lj = centerZ - gate.width / 2;
+      const rj = centerZ + gate.width / 2;
+      return Math.abs(leftZ - lj) < 0.01 && Math.abs(rightZ - rj) < 0.01;
+    });
+    if (isGateSpan) continue;
+    if (gap > 3.0) {
+      fillerPositions.push(leftZ + gap / 3);
+      fillerPositions.push(leftZ + (2 * gap) / 3);
+    } else if (gap > 0.5) {
+      fillerPositions.push(leftZ + gap / 2);
+    }
+  }
+  for (const p of fillerPositions) positions.add(p);
+  return [...positions].sort((a, b) => a - b);
+}
+
+/**
+ * Check if a section between zLeft and zRight is fully occluded by a gate opening
+ * on the end wall. A section is considered occluded when it falls entirely within
+ * the gate's horizontal span AND the gate's height covers the full wall height.
+ */
+function isSectionOccludedByGate(
+  zLeft: number,
+  zRight: number,
+  wallHeight: number,
+  wallOpenings: Opening[],
+  span: number,
+  isFront: boolean,
+): boolean {
+  for (const opening of wallOpenings) {
+    const centerZ = isFront ? (span - opening.positionX) : opening.positionX;
+    const gateLeft = centerZ - opening.width / 2;
+    const gateRight = centerZ + opening.width / 2;
+    // Section must be fully within gate horizontal span
+    if (zLeft >= gateLeft - 0.01 && zRight <= gateRight + 0.01) {
+      // Opening must cover full wall height (sill at 0 and top reaches wall height)
+      if (opening.sillHeight <= 0.01 && opening.height >= wallHeight - 0.05) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Check if a bay on a side wall is fully occluded by an opening.
+ * An opening fully occludes a bay when the opening's height equals the wall height
+ * (sill at 0, top at wallHeight) and its width covers the entire bay.
+ */
+function isBayFullyOccluded(
+  bayStartX: number,
+  bayEndX: number,
+  wallHeight: number,
+  wallOpenings: Opening[],
+): boolean {
+  for (const opening of wallOpenings) {
+    // Opening position is center X; check if it covers the bay
+    const openingLeft = opening.positionX - opening.width / 2;
+    const openingRight = opening.positionX + opening.width / 2;
+    // Opening covers the bay horizontally
+    if (openingLeft <= bayStartX + 0.01 && openingRight >= bayEndX - 0.01) {
+      // Opening covers full height
+      if (opening.sillHeight <= 0.01 && opening.height >= wallHeight - 0.05) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
  * Compute the bill of materials for all cladding sheets/panels on the hall.
  * Groups identical panels (same type + thickness + module + length) and returns counts.
  * All surfaces are GROSS (full panel area before any trimming).
+ * Panels fully occluded by openings (gates spanning full wall height) are subtracted.
  */
 export function computeSheetBill(
   params: HallParameters,
   cladding: CladdingParameters,
   results: CalculationResults,
+  openings?: Opening[],
 ): SheetBillResult {
   const { span, length: hallLength, wallHeight, roofAngle } = params;
   const columnSpacing = results.columnSpacing;
@@ -100,6 +205,18 @@ export function computeSheetBill(
   const endWallThickness = isEndWallTrapezoid ? null : (cladding.sandwichThickness ?? 100);
   const roofThickness = cladding.roofType === 'sandwich_roof' ? (cladding.roofSandwichThickness ?? 100) : null;
 
+  // Filter openings by wall
+  const sideLeftOpenings = (openings ?? []).filter(o => o.wall === 'side_left');
+  const sideRightOpenings = (openings ?? []).filter(o => o.wall === 'side_right');
+  const endFrontGates = (openings ?? []).filter(
+    o => o.wall === 'end_front' && (o.type === 'sectional_gate' || o.type === 'sliding_gate')
+  );
+  const endBackGates = (openings ?? []).filter(
+    o => o.wall === 'end_back' && (o.type === 'sectional_gate' || o.type === 'sliding_gate')
+  );
+  const endFrontAllOpenings = (openings ?? []).filter(o => o.wall === 'end_front');
+  const endBackAllOpenings = (openings ?? []).filter(o => o.wall === 'end_back');
+
   // Accumulator: key -> count
   const itemMap = new Map<string, SheetBillItem>();
   let totalWallSurfaceGross = 0;
@@ -118,21 +235,34 @@ export function computeSheetBill(
   const isHorizontalLayout = cladding.panelOrientation === 'horizontal';
 
   // ============== SIDE WALLS ==============
-  // 2 walls, each with numberOfBays bays
+  // 2 walls (wallIdx 0 = side_left, wallIdx 1 = side_right), each with numberOfBays bays
   for (let wallIdx = 0; wallIdx < 2; wallIdx++) {
+    const wallOpenings = wallIdx === 0 ? sideLeftOpenings : sideRightOpenings;
+
     for (let bayIndex = 0; bayIndex < numberOfBays; bayIndex++) {
       let panelWidth = columnSpacing - 0.020;
+      let bayStartX = bayIndex * columnSpacing;
+      let bayEndX = (bayIndex + 1) * columnSpacing;
 
       if (bayIndex === 0) {
         const leftEdge = -(endColumnOuterOffset + endWallThicknessOffset)
           + (isEndWallTrapezoid ? endWallThicknessOffset : sandwichThicknessM / 2) + 0.010;
         const rightEdge = columnSpacing - 0.010;
         panelWidth = rightEdge - leftEdge;
+        bayStartX = leftEdge;
+        bayEndX = rightEdge;
       } else if (bayIndex === numberOfBays - 1) {
         const leftEdge = (numberOfBays - 1) * columnSpacing + 0.010;
         const rightEdge = hallLength + (endColumnOuterOffset + endWallThicknessOffset)
           - (isEndWallTrapezoid ? endWallThicknessOffset : sandwichThicknessM / 2) - 0.010;
         panelWidth = rightEdge - leftEdge;
+        bayStartX = leftEdge;
+        bayEndX = rightEdge;
+      }
+
+      // Skip bay if fully occluded by an opening that covers full wall height
+      if (isBayFullyOccluded(bayStartX, bayEndX, wallHeight, wallOpenings)) {
+        continue;
       }
 
       if (isHorizontalLayout) {
@@ -162,16 +292,25 @@ export function computeSheetBill(
   }
 
   // ============== END WALLS ==============
-  // Compute uniform end column Z positions (simplified - no gate adjustments)
+  // Compute uniform end column Z positions (fallback when no gates)
   const targetSpacing = 3.0;
   const n = Math.max(1, Math.round(span / targetSpacing) - 1);
-  const endColZPositions = [0];
-  for (let i = 1; i <= n; i++) endColZPositions.push((i / (n + 1)) * span);
-  endColZPositions.push(span);
-  endColZPositions.sort((a, b) => a - b);
+  const endColZPositionsUniform: number[] = [0];
+  for (let i = 1; i <= n; i++) endColZPositionsUniform.push((i / (n + 1)) * span);
+  endColZPositionsUniform.push(span);
+  endColZPositionsUniform.sort((a, b) => a - b);
 
-  // 2 end walls (front + back)
+  // Compute gate-aware positions for front and back walls
+  const endColZPositionsFront = computeEndColPositionsForWall(span, endFrontGates, endColZPositionsUniform, true);
+  const endColZPositionsBack = computeEndColPositionsForWall(span, endBackGates, endColZPositionsUniform, false);
+
+  // 2 end walls (wallIdx 0 = front, wallIdx 1 = back)
   for (let wallIdx = 0; wallIdx < 2; wallIdx++) {
+    const isFront = wallIdx === 0;
+    const endColZPositions = isFront ? endColZPositionsFront : endColZPositionsBack;
+    const wallGates = isFront ? endFrontGates : endBackGates;
+    const wallAllOpenings = isFront ? endFrontAllOpenings : endBackAllOpenings;
+
     // Rectangular area below wallHeight
     for (let i = 0; i < endColZPositions.length - 1; i++) {
       let zLeft = endColZPositions[i];
@@ -186,6 +325,11 @@ export function computeSheetBill(
       }
 
       const panelWidth = (zRight - zLeft) - 0.020; // 20mm dilation
+
+      // Skip section if fully occluded by a full-height opening
+      if (isSectionOccludedByGate(zLeft, zRight, wallHeight, wallAllOpenings, span, isFront)) {
+        continue;
+      }
 
       if (isHorizontalLayout) {
         // Horizontal: sheets divided along Y (height) with endWallModuleWidth
@@ -229,6 +373,12 @@ export function computeSheetBill(
       }
       if (i === endColZPositions.length - 2) {
         zRight = span + columnOuterFlangeOffset + 2 * sideWallThicknessOffset;
+      }
+
+      // Skip gable section above a gate that covers full wall height
+      // (gate spans are not clad in the gable either, as there is no structure behind)
+      if (isSectionOccludedByGate(zLeft, zRight, wallHeight, wallGates, span, isFront)) {
+        continue;
       }
 
       const panelWidth = (zRight - zLeft) - 0.020;

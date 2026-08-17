@@ -1,21 +1,22 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { HallParameters, CladdingParameters, CalculationResults } from '../types';
+import type { HallParameters, CladdingParameters, CalculationResults, Opening } from '../types';
 import { computeSheetBill } from '../utils/sheet-bill';
 
 interface SheetBillPanelProps {
   params: HallParameters;
   cladding: CladdingParameters;
   results: CalculationResults;
+  openings?: Opening[];
 }
 
-export function SheetBillPanel({ params, cladding, results }: SheetBillPanelProps) {
+export function SheetBillPanel({ params, cladding, results, openings }: SheetBillPanelProps) {
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
 
   const billResult = useMemo(
-    () => computeSheetBill(params, cladding, results),
-    [params, cladding, results]
+    () => computeSheetBill(params, cladding, results, openings),
+    [params, cladding, results, openings]
   );
 
   return (
