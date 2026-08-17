@@ -322,8 +322,8 @@ export const HallModel = React.memo(function HallModel({ params, results, claddi
         <BuildingEdgeLines
           span={span}
           hallLength={hallLength}
-          wallHeight={effectiveColumnHeight}
-          ridgeHeight={effectiveRidgeHeight}
+          wallHeight={wallHeight}
+          ridgeHeight={wallHeight + (span / 2) * Math.tan((roofAngle * Math.PI) / 180)}
           columnOuterFlangeOffset={columnOuterFlangeOffset}
           endColumnOuterOffset={endColumnOuterOffset}
         />

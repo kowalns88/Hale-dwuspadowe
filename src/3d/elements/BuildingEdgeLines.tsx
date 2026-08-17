@@ -24,7 +24,7 @@ interface BuildingEdgeLinesProps {
  * - Bottom perimeter edges along ground
  */
 
-const EDGE_THICKNESS = 0.018; // 18mm diameter tubes
+const EDGE_THICKNESS = 0.025; // 25mm diameter tubes
 const EDGE_COLOR = '#1a1a1a';
 const RADIAL_SEGMENTS = 4; // Low poly for performance (square-ish tubes)
 
@@ -108,8 +108,8 @@ export function BuildingEdgeLines({
 
   const segments: EdgeSegment[] = useMemo(() => {
     // Offsets: place edge lines slightly outside cladding surface (~20mm beyond column flange)
-    const sideOffset = columnOuterFlangeOffset + 0.05;
-    const endOffset = endColumnOuterOffset + 0.05;
+    const sideOffset = columnOuterFlangeOffset + 0.15;
+    const endOffset = endColumnOuterOffset + 0.15;
 
     // Key coordinates
     const xMin = -endOffset;             // front end wall (just outside)
