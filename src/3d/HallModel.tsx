@@ -19,6 +19,7 @@ import { Cladding } from './elements/Cladding';
 import { Openings } from './elements/Openings';
 import { GateFrame } from './elements/GateFrame';
 import { Skylight } from './elements/Skylight';
+import { BuildingEdgeLines } from './elements/BuildingEdgeLines';
 import { getEffectiveRafterTop } from '../utils/geometry';
 import type { HallParameters, CalculationResults, CladdingParameters, Opening, OpeningType, SkylightParameters, SelectedSheet } from '../types';
 
@@ -315,6 +316,17 @@ export const HallModel = React.memo(function HallModel({ params, results, claddi
           onSelectSheet={onSelectSheet}
         />
       )}
+
+      {/* Building edge lines for architectural silhouette */}
+      <BuildingEdgeLines
+        span={span}
+        hallLength={hallLength}
+        wallHeight={effectiveColumnHeight}
+        roofAngle={roofAngle}
+        ridgeHeight={effectiveRidgeHeight}
+        columnOuterFlangeOffset={columnOuterFlangeOffset}
+        endColumnOuterOffset={endColumnOuterOffset}
+      />
 
       {/* Openings (gates, doors, windows) */}
       {openings && openings.length > 0 && (
