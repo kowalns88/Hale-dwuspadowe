@@ -48,7 +48,7 @@ function SceneContent(props: SceneProps) {
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
         <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#e8e8e8" roughness={0.9} metalness={0} />
+        <meshStandardMaterial color="#a8b8a0" roughness={0.9} metalness={0} />
       </mesh>
 
       <HallModel params={params} results={results} selectedSheet={_selectedSheet} onSelectSheet={_onSelectSheet} {...rest} />
@@ -81,7 +81,7 @@ export function Scene(props: SceneProps) {
       className="w-full h-full"
       onPointerMissed={() => props.onSelectSheet?.(null)}
     >
-      <color attach="background" args={['#f5f5f5']} />
+      <color attach="background" args={['#dce8f0']} />
       <Suspense fallback={null}>
         <SceneContent {...props} />
       </Suspense>
