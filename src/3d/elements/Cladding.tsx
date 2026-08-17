@@ -2053,6 +2053,7 @@ export const Cladding = React.memo(function Cladding({
 
         // Thickness offset for sandwich roof panels (shift in local Z so bottom edge is visible from eave)
         const roofThicknessM = cladding.roofType === 'sandwich_roof' ? (cladding.roofSandwichThickness ?? 100) / 1000 : 0;
+        const isSandwichRoof = roofThicknessM > 0;
 
         return (
           <>
@@ -2082,9 +2083,12 @@ export const Cladding = React.memo(function Cladding({
                         });
                       }}
                     >
-                      <primitive object={createTrapezoidalGeometry(sheetW, roofSlopeLengthWithOverhang, roofProfileType, 'x')} attach="geometry" />
+                      {isSandwichRoof
+                        ? <planeGeometry args={[sheetW, roofSlopeLengthWithOverhang]} />
+                        : <primitive object={createTrapezoidalGeometry(sheetW, roofSlopeLengthWithOverhang, roofProfileType, 'x')} attach="geometry" />
+                      }
                     </mesh>
-                    {roofThicknessM > 0 && (
+                    {isSandwichRoof && (
                       <>
                         {/* Bottom plane */}
                         <mesh position={[sheetX, 0, -roofThicknessM]} material={isSelected ? highlightedRoofMat : roofMat}>
@@ -2139,9 +2143,12 @@ export const Cladding = React.memo(function Cladding({
                         });
                       }}
                     >
-                      <primitive object={createTrapezoidalGeometry(sheetW, roofSlopeLengthWithOverhang, roofProfileType, 'x')} attach="geometry" />
+                      {isSandwichRoof
+                        ? <planeGeometry args={[sheetW, roofSlopeLengthWithOverhang]} />
+                        : <primitive object={createTrapezoidalGeometry(sheetW, roofSlopeLengthWithOverhang, roofProfileType, 'x')} attach="geometry" />
+                      }
                     </mesh>
-                    {roofThicknessM > 0 && (
+                    {isSandwichRoof && (
                       <>
                         {/* Bottom plane */}
                         <mesh position={[sheetX, 0, -roofThicknessM]} material={isSelected ? highlightedRoofMat : roofMat}>
