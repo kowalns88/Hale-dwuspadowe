@@ -30,7 +30,7 @@ function SceneContent(props: SceneProps) {
     <>
       <Environment preset="city" />
 
-      <ambientLight intensity={0.4} />
+      <ambientLight intensity={0.2} />
       <directionalLight
         position={[40, 60, 30]}
         intensity={2.0}

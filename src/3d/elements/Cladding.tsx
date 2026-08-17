@@ -309,6 +309,7 @@ const SheetMesh = React.memo(function SheetMesh({
       position={position}
       rotation={rotation}
       geometry={geometry}
+      castShadow
       material={material}
       onPointerDown={onPointerDown}
     />

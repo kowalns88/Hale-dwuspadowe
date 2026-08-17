@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import * as THREE from 'three';
 
 interface BuildingEdgeLinesProps {
@@ -12,7 +12,9 @@ interface BuildingEdgeLinesProps {
 
 /**
  * Renders dark silhouette edge lines at building envelope boundaries
- * using Three.js LineSegments for crisp architectural edge visualization.
+ * using actual 3D mesh geometry (thin cylinders ~18mm thick) for visibility.
+ * WebGL lineSegments always render at 1px regardless of linewidth,
+ * so we use CylinderGeometry tubes instead for proper architectural edge visualization.
  *
  * Lines mark:
  * - 4 vertical corner edges
@@ -21,6 +23,60 @@ interface BuildingEdgeLinesProps {
  * - 4 gable roof slope edges (2 per gable end)
  * - Bottom perimeter edges along ground
  */
+
+const EDGE_THICKNESS = 0.018; // 18mm diameter tubes
+const EDGE_COLOR = '#1a1a1a';
+const RADIAL_SEGMENTS = 4; // Low poly for performance (square-ish tubes)
+
+interface EdgeSegment {
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+}
+
+function EdgeTube({ start, end, geometry, material }: {
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  geometry: THREE.CylinderGeometry;
+  material: THREE.MeshStandardMaterial;
+}) {
+  const { position, quaternion, scaleY } = useMemo(() => {
+    const direction = new THREE.Vector3().subVectors(end, start);
+    const length = direction.length();
+    const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+
+    // CylinderGeometry is oriented along Y axis by default
+    // We need to rotate it to align with the direction vector
+    const up = new THREE.Vector3(0, 1, 0);
+    const quat = new THREE.Quaternion();
+    const dir = direction.clone().normalize();
+
+    // If direction is exactly (anti-)parallel to up, handle edge case
+    if (Math.abs(dir.dot(up)) > 0.9999) {
+      if (dir.y < 0) {
+        quat.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+      }
+    } else {
+      quat.setFromUnitVectors(up, dir);
+    }
+
+    return {
+      position: midpoint,
+      quaternion: quat,
+      scaleY: length,
+    };
+  }, [start, end]);
+
+  return (
+    <mesh
+      position={[position.x, position.y, position.z]}
+      quaternion={quaternion}
+      scale={[1, scaleY, 1]}
+      geometry={geometry}
+      material={material}
+    />
+  );
+}
+
 export function BuildingEdgeLines({
   span,
   hallLength,
@@ -29,9 +85,28 @@ export function BuildingEdgeLines({
   columnOuterFlangeOffset,
   endColumnOuterOffset,
 }: BuildingEdgeLinesProps) {
-  const geometryRef = useRef<THREE.BufferGeometry | null>(null);
+  // Shared geometry and material for all edge tubes (performance optimization)
+  const sharedGeometry = useMemo(() => {
+    // Unit height cylinder (height=1), will be scaled per segment
+    const geo = new THREE.CylinderGeometry(
+      EDGE_THICKNESS / 2,
+      EDGE_THICKNESS / 2,
+      1,
+      RADIAL_SEGMENTS,
+      1
+    );
+    return geo;
+  }, []);
 
-  const geometry = useMemo(() => {
+  const sharedMaterial = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: EDGE_COLOR,
+      roughness: 0.8,
+      metalness: 0.1,
+    });
+  }, []);
+
+  const segments: EdgeSegment[] = useMemo(() => {
     // Offsets: place edge lines slightly outside cladding surface (~20mm beyond column flange)
     const sideOffset = columnOuterFlangeOffset + 0.05;
     const endOffset = endColumnOuterOffset + 0.05;
@@ -46,10 +121,13 @@ export function BuildingEdgeLines({
     const yRidge = ridgeHeight;
     const zMid = span / 2;               // ridge is at mid-span
 
-    const points: number[] = [];
+    const edges: EdgeSegment[] = [];
 
     function addLine(x1: number, y1: number, z1: number, x2: number, y2: number, z2: number) {
-      points.push(x1, y1, z1, x2, y2, z2);
+      edges.push({
+        start: new THREE.Vector3(x1, y1, z1),
+        end: new THREE.Vector3(x2, y2, z2),
+      });
     }
 
     // === 4 Vertical corner edges ===
@@ -79,22 +157,20 @@ export function BuildingEdgeLines({
     addLine(xMin, yBottom, zMin, xMin, yBottom, zMax); // front bottom
     addLine(xMax, yBottom, zMin, xMax, yBottom, zMax); // back bottom
 
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
-    return geom;
+    return edges;
   }, [span, hallLength, wallHeight, ridgeHeight, columnOuterFlangeOffset, endColumnOuterOffset]);
 
-  // Dispose previous geometry when dependencies change or on unmount
-  useEffect(() => {
-    geometryRef.current = geometry;
-    return () => {
-      geometryRef.current?.dispose();
-    };
-  }, [geometry]);
-
   return (
-    <lineSegments geometry={geometry}>
-      <lineBasicMaterial color="#303030" linewidth={1} />
-    </lineSegments>
+    <group>
+      {segments.map((seg, i) => (
+        <EdgeTube
+          key={i}
+          start={seg.start}
+          end={seg.end}
+          geometry={sharedGeometry}
+          material={sharedMaterial}
+        />
+      ))}
+    </group>
   );
 }
