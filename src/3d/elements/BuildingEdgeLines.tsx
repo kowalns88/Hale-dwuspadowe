@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { getRALHex } from '../../data/colors';
 
@@ -16,7 +16,7 @@ interface BuildingEdgeLinesProps {
 }
 
 // Flashing dimensions (meters)
-const RIDGE_CAP_WIDTH = 0.100; // 100mm per side (200mm total)
+const RIDGE_CAP_HALF_WIDTH = 0.100; // 100mm per side (200mm total cap width)
 const RIDGE_CAP_THICKNESS = 0.003; // 3mm thick
 
 const EAVE_VERTICAL_LEG = 0.100; // 100mm
@@ -36,7 +36,7 @@ const GABLE_THICKNESS = 0.002; // 2mm
  */
 function createRidgeCapShape(roofAngleRad: number): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfWidth = RIDGE_CAP_WIDTH;
+  const halfWidth = RIDGE_CAP_HALF_WIDTH;
   const t = RIDGE_CAP_THICKNESS;
 
   // V-shape: two legs meeting at center, opening downward
@@ -226,32 +226,65 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
     return new THREE.ExtrudeGeometry(shape, extrudeSettings);
   }, [roofSlopeLength, eaveOverhang]);
 
+  // Dispose geometries and material on unmount or when dependencies change
+  useEffect(() => {
+    return () => {
+      ridgeCapGeometry.dispose();
+    };
+  }, [ridgeCapGeometry]);
+
+  useEffect(() => {
+    return () => {
+      eaveTrimGeometry.dispose();
+    };
+  }, [eaveTrimGeometry]);
+
+  useEffect(() => {
+    return () => {
+      cornerTrimGeometry.dispose();
+    };
+  }, [cornerTrimGeometry]);
+
+  useEffect(() => {
+    return () => {
+      gableEdgeTrimGeometry.dispose();
+    };
+  }, [gableEdgeTrimGeometry]);
+
+  useEffect(() => {
+    return () => {
+      material.dispose();
+    };
+  }, [material]);
+
   return (
     <group>
       {/* ===== Ridge Cap (kalenica) ===== */}
-      {/* V-shaped flashing along the ridge, extruded along X axis */}
+      {/* V-shaped flashing along the ridge, extruded along building X axis */}
       <mesh
         geometry={ridgeCapGeometry}
         material={material}
         position={[xMin, ridgeY, ridgeZ]}
-        rotation={[0, 0, 0]}
+        rotation={[0, -Math.PI / 2, 0]}
+        castShadow
       />
 
       {/* ===== Eave Trims (okap) ===== */}
-      {/* Left eave (Z = zMin side) - L-shape with vertical leg going down, horizontal leg outward */}
+      {/* Left eave (Z = zMin side) - L-shape with vertical leg going down, horizontal leg outward (-Z) */}
       <mesh
         geometry={eaveTrimGeometry}
         material={material}
         position={[xMin, wallHeight, zMin]}
-        rotation={[Math.PI / 2, 0, 0]}
+        rotation={[0, -Math.PI / 2, 0]}
+        castShadow
       />
-      {/* Right eave (Z = zMax side) - mirrored */}
+      {/* Right eave (Z = zMax side) - mirrored, horizontal leg goes outward (+Z) */}
       <mesh
         geometry={eaveTrimGeometry}
         material={material}
-        position={[xMin, wallHeight, zMax]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        scale={[1, 1, 1]}
+        position={[xMax, wallHeight, zMax]}
+        rotation={[0, Math.PI / 2, 0]}
+        castShadow
       />
 
       {/* ===== Corner Trims (narozniki) ===== */}
@@ -261,6 +294,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
         material={material}
         position={[xMin, 0, zMin]}
         rotation={[Math.PI / 2, 0, 0]}
+        castShadow
       />
       {/* Front-right corner */}
       <mesh
@@ -268,6 +302,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
         material={material}
         position={[xMin, 0, zMax]}
         rotation={[Math.PI / 2, 0, Math.PI / 2]}
+        castShadow
       />
       {/* Back-left corner */}
       <mesh
@@ -275,6 +310,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
         material={material}
         position={[xMax, 0, zMin]}
         rotation={[Math.PI / 2, 0, -Math.PI / 2]}
+        castShadow
       />
       {/* Back-right corner */}
       <mesh
@@ -282,6 +318,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
         material={material}
         position={[xMax, 0, zMax]}
         rotation={[Math.PI / 2, 0, Math.PI]}
+        castShadow
       />
 
       {/* ===== Gable Edge Trims (krawedzie szczytowe) ===== */}
@@ -291,6 +328,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
         material={material}
         position={[xMin, wallHeight, zMin - eaveOverhang * Math.cos(roofAngleRad)]}
         rotation={[roofAngleRad, 0, 0]}
+        castShadow
       />
       {/* Front gable - right slope (from eave at zMax up to ridge) */}
       <mesh
@@ -299,6 +337,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
         position={[xMin, wallHeight, zMax + eaveOverhang * Math.cos(roofAngleRad)]}
         rotation={[-roofAngleRad, 0, 0]}
         scale={[1, -1, 1]}
+        castShadow
       />
       {/* Back gable - left slope */}
       <mesh
@@ -306,6 +345,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
         material={material}
         position={[xMax, wallHeight, zMin - eaveOverhang * Math.cos(roofAngleRad)]}
         rotation={[roofAngleRad, 0, 0]}
+        castShadow
       />
       {/* Back gable - right slope */}
       <mesh
@@ -314,6 +354,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
         position={[xMax, wallHeight, zMax + eaveOverhang * Math.cos(roofAngleRad)]}
         rotation={[-roofAngleRad, 0, 0]}
         scale={[1, -1, 1]}
+        castShadow
       />
     </group>
   );
