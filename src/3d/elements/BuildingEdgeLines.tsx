@@ -16,14 +16,14 @@ interface BuildingEdgeLinesProps {
 }
 
 // Flashing dimensions (meters)
-const RIDGE_CAP_HALF_WIDTH = 0.100; // 100mm per side (200mm total cap width)
-const RIDGE_CAP_THICKNESS = 0.003; // 3mm thick
+const RIDGE_CAP_HALF_WIDTH = 0.150; // 150mm per side (300mm total cap width)
+const RIDGE_CAP_THICKNESS = 0.005; // 5mm thick
 
-const EAVE_VERTICAL_LEG = 0.100; // 100mm
+const EAVE_VERTICAL_LEG = 0.150; // 150mm
 const EAVE_HORIZONTAL_LEG = 0.050; // 50mm
 const EAVE_THICKNESS = 0.002; // 2mm
 
-const CORNER_LEG = 0.050; // 50mm per leg
+const CORNER_LEG = 0.080; // 80mm per leg
 const CORNER_THICKNESS = 0.002; // 2mm
 
 const GABLE_LEG_A = 0.050; // 50mm

@@ -686,7 +686,7 @@ export const Cladding = React.memo(function Cladding({
 
   // Joint line (dark strip) material for visible locks/dilation at column positions
   const jointLineMaterial = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#404040',
+    color: '#1a1a1a',
     roughness: 0.6,
     metalness: 0.3,
     depthWrite: true,
@@ -2237,14 +2237,14 @@ export const Cladding = React.memo(function Cladding({
               position={[xPos, sideWallHeight / 2, zLeft]}
               material={jointLineMaterial}
             >
-              <boxGeometry args={[0.005, sideWallHeight, 0.020]} />
+              <boxGeometry args={[0.012, sideWallHeight, 0.020]} />
             </mesh>
             {/* Right wall joint */}
             <mesh
               position={[xPos, sideWallHeight / 2, zRight]}
               material={jointLineMaterial}
             >
-              <boxGeometry args={[0.005, sideWallHeight, 0.020]} />
+              <boxGeometry args={[0.012, sideWallHeight, 0.020]} />
             </mesh>
           </React.Fragment>
         );
