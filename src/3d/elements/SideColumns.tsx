@@ -9,7 +9,6 @@ interface SideColumnsProps {
   span: number;
   columnSpacing: number;
   numberOfFrames: number;
-  roofAngle: number;
   columnFlangeOffset: number;
 }
 
@@ -19,15 +18,13 @@ export const SideColumns = React.memo(function SideColumns({
   span,
   columnSpacing,
   numberOfFrames,
-  roofAngle,
 }: SideColumnsProps) {
   const h = profile.h / 1000;
   const b = profile.b / 1000;
   const tw = (profile.tw ?? 7) / 1000;
   const tf = (profile.tf ?? 11) / 1000;
 
-  const roofAngleRad = (roofAngle * Math.PI) / 180;
-  const columnHeight = wallHeight - h * Math.sin(roofAngleRad);
+  const columnHeight = wallHeight;
 
   const geometry = useIBeamGeometry({ h, b, tw, tf, length: columnHeight });
 
