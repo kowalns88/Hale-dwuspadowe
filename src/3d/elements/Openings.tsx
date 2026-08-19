@@ -107,18 +107,34 @@ function SlidingGateDetail({ width, height, material, wall }: { width: number; h
   const railDepth = 0.04;
   const isSideWall = wall === 'side_left' || wall === 'side_right';
 
+  const panelMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: getRALHex('9002'),
+    side: THREE.DoubleSide,
+    depthWrite: true,
+  }), []);
+
+  useEffect(() => {
+    return () => { panelMat.dispose(); };
+  }, [panelMat]);
+
   if (isSideWall) {
     // Single rail: total length = 2 * width (gate itself + sliding space to one side)
     const railLength = width * 2;
     // Offset so the rail extends from -width/2 to +width*1.5 (gate occupies -width/2 to +width/2, rail extends +width to the right)
     const offsetX = width / 2;
     return (
-      <mesh
-        position={[offsetX, height / 2 + railHeight / 2, railDepth / 2]}
-        material={material}
-      >
-        <boxGeometry args={[railLength, railHeight, railDepth]} />
-      </mesh>
+      <>
+        {/* Gate panel body */}
+        <mesh position={[0, 0, 0.02]} material={panelMat}>
+          <boxGeometry args={[width - 0.02, height - 0.02, 0.04]} />
+        </mesh>
+        <mesh
+          position={[offsetX, height / 2 + railHeight / 2, railDepth / 2]}
+          material={material}
+        >
+          <boxGeometry args={[railLength, railHeight, railDepth]} />
+        </mesh>
+      </>
     );
   } else {
     // End walls: two half-rails extending outward from both sides of the gate
@@ -129,6 +145,10 @@ function SlidingGateDetail({ width, height, material, wall }: { width: number; h
     const rightOffsetX = width / 2 + halfRailLength / 2;
     return (
       <>
+        {/* Gate panel body */}
+        <mesh position={[0, 0, 0.02]} material={panelMat}>
+          <boxGeometry args={[width - 0.02, height - 0.02, 0.04]} />
+        </mesh>
         <mesh
           position={[leftOffsetX, height / 2 + railHeight / 2, railDepth / 2]}
           material={material}
@@ -298,7 +318,7 @@ export const Openings = React.memo(function Openings({ params, openings, wallZOf
   const cutoutMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: '#1a1a2e',
+        color: '#1a1a1a',
         transparent: true,
         opacity: 0.92,
         side: THREE.DoubleSide,
@@ -310,7 +330,7 @@ export const Openings = React.memo(function Openings({ params, openings, wallZOf
   const detailMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: '#444466',
+        color: '#555555',
         side: THREE.DoubleSide,
       }),
     []
