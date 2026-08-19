@@ -1595,9 +1595,9 @@ export const Cladding = React.memo(function Cladding({
           }
         }
 
-        // One straight cut line: from Y=0 at Z=0/span to Y=ridgeHeight-wallHeight-0.005 at Z=span/2
+        // One straight cut line: from Y=0 at Z=0/span to Y=ridgeHeight-wallHeight-0.015 at Z=span/2
         // Height at any Z position along this line:
-        const roofLineHeightFront = (span / 2) * Math.tan(roofAngleRad) - 0.005; // max height at ridge
+        const roofLineHeightFront = (span / 2) * Math.tan(roofAngleRad) - 0.015; // max height at ridge
         const hAtZFront = (z: number) => {
           const distFromEdge = Math.min(z, span - z); // distance from nearest eave edge
           return Math.max(0, (distFromEdge / (span / 2)) * roofLineHeightFront);
@@ -1938,9 +1938,9 @@ export const Cladding = React.memo(function Cladding({
           }
         }
 
-        // One straight cut line: from Y=0 at Z=0/span to Y=ridgeHeight-wallHeight-0.005 at Z=span/2
+        // One straight cut line: from Y=0 at Z=0/span to Y=ridgeHeight-wallHeight-0.015 at Z=span/2
         // Height at any Z position along this line:
-        const roofLineHeightBack = (span / 2) * Math.tan(roofAngleRad) - 0.005; // max height at ridge
+        const roofLineHeightBack = (span / 2) * Math.tan(roofAngleRad) - 0.015; // max height at ridge
         const hAtZBack = (z: number) => {
           const distFromEdge = Math.min(z, span - z); // distance from nearest eave edge
           return Math.max(0, (distFromEdge / (span / 2)) * roofLineHeightBack);
