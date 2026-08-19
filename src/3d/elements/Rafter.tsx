@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useIBeamGeometry } from '../profiles/IBeamGeometry';
+import { useIBeamGeometryAngled } from '../profiles/IBeamGeometry';
 import { rafterMaterial } from '../materials';
 import type { SteelProfile } from '../../types';
 
@@ -37,10 +37,9 @@ export const Rafter = React.memo(function Rafter({
 
   const ridgePlateGap = 0.015; // 15mm gap for ridge plate
   const effectiveHalfSpanZ = span / 2 - columnFlangeOffset - ridgePlateGap;
-  const slopeLength = effectiveHalfSpanZ / Math.cos((roofAngle * Math.PI) / 180);
-  const geometry = useIBeamGeometry({ h, b, tw, tf, length: slopeLength });
-
   const roofAngleRad = (roofAngle * Math.PI) / 180;
+  const slopeLength = effectiveHalfSpanZ / Math.cos(roofAngleRad);
+  const geometry = useIBeamGeometryAngled({ h, b, tw, tf, length: slopeLength, cutAngle: roofAngleRad });
 
   const framePositions = useMemo(() => {
     const positions: number[] = [];

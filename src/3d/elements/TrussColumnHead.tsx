@@ -185,7 +185,7 @@ function ColumnHead({
         material={plateMaterial}
         position={[
           x,
-          wallHeight - trussHeight / 2,
+          wallHeight - (trussHeight + chordSize + 0.04) / 2,
           side === 'left' ? columnFlangeOffset : span - columnFlangeOffset,
         ]}
         castShadow
