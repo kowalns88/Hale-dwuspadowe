@@ -191,7 +191,7 @@ function ColumnHead({
         castShadow
         receiveShadow
       >
-        <boxGeometry args={[plateSize, trussHeight + chordSize, 0.020]} />
+        <boxGeometry args={[0.020, trussHeight + chordSize, plateSize]} />
       </mesh>
     </group>
   );
