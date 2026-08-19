@@ -105,7 +105,7 @@ function createMicrolinedGeometry(
  */
 function getTrapezoidalParams(type: 'T18' | 'T35' | 'ROOF_SANDWICH') {
   if (type === 'T35') {
-    return { height: 0.035, plateau: 0.036, valley: 0.130, period: 0.213 };
+    return { height: 0.020, plateau: 0.036, valley: 0.130, period: 0.213 };
   }
   if (type === 'ROOF_SANDWICH') {
     return { height: 0.042, plateau: 0.040, valley: 0.260, period: 0.350 };
@@ -215,7 +215,7 @@ function createTrapezoidalGeometry(
 
   // Scale segments: 10 vertices per wave period along wave axis for proper trapezoid rendering
   const waveCount = waveAxis === 'x' ? Math.ceil(width / period) : Math.ceil(height / period);
-  const segAlongWave = Math.min(waveCount * 20, 4000); // 20 segments per wave period for sharp trapezoids
+  const segAlongWave = Math.min(waveCount * 10, 2500); // 10 segments per wave period for smooth trapezoids
   const segCross = Math.min(Math.ceil((waveAxis === 'x' ? height : width) * 2), 100);
   const segW = waveAxis === 'x' ? segAlongWave : segCross;
   const segH = waveAxis === 'x' ? segCross : segAlongWave;
