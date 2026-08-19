@@ -101,11 +101,15 @@ function createMicrolinedGeometry(
  * Profile parameters for trapezoidal sheets (in meters).
  * T18: height 18mm, plateau 70mm, valley 188mm, period ~290mm
  * T35: height 35mm, plateau 126mm, valley 210mm, period ~381mm
+ * T35_ROOF: height 12mm, plateau 36mm, valley 130mm, period 213mm (reduced amplitude for roof)
  * ROOF_SANDWICH: height 42mm, plateau 100mm, valley 200mm, period 350mm
  */
-function getTrapezoidalParams(type: 'T18' | 'T35' | 'ROOF_SANDWICH') {
+function getTrapezoidalParams(type: 'T18' | 'T35' | 'T35_ROOF' | 'ROOF_SANDWICH') {
   if (type === 'T35') {
     return { height: 0.035, plateau: 0.036, valley: 0.130, period: 0.213 };
+  }
+  if (type === 'T35_ROOF') {
+    return { height: 0.012, plateau: 0.036, valley: 0.130, period: 0.213 };
   }
   if (type === 'ROOF_SANDWICH') {
     return { height: 0.042, plateau: 0.040, valley: 0.260, period: 0.350 };
@@ -126,7 +130,7 @@ function createTrapezoidMeshGeometry(
   panelWidth: number,
   hLeft: number,
   hRight: number,
-  profileType: 'T18' | 'T35' | 'ROOF_SANDWICH' | null,
+  profileType: 'T18' | 'T35' | 'T35_ROOF' | 'ROOF_SANDWICH' | null,
   waveAxis: 'x' | 'y',
 ): THREE.BufferGeometry {
   const segX = 20;
@@ -207,7 +211,7 @@ function createTrapezoidMeshGeometry(
 function createTrapezoidalGeometry(
   width: number,
   height: number,
-  profileType: 'T18' | 'T35' | 'ROOF_SANDWICH',
+  profileType: 'T18' | 'T35' | 'T35_ROOF' | 'ROOF_SANDWICH',
   waveAxis: 'x' | 'y',
   invert: boolean = false,
 ): THREE.PlaneGeometry {
@@ -251,7 +255,7 @@ interface SheetMeshProps {
   position: [number, number, number];
   rotation?: [number, number, number];
   isTrapezoid: boolean;
-  profileType: 'T18' | 'T35' | 'ROOF_SANDWICH';
+  profileType: 'T18' | 'T35' | 'T35_ROOF' | 'ROOF_SANDWICH';
   waveAxis: 'x' | 'y';
   sandwichThickness: number;
   baseMaterial: THREE.MeshStandardMaterial;
@@ -390,8 +394,8 @@ export const Cladding = React.memo(function Cladding({
   const roofModuleWidth = cladding.roofType === 'T35' ? 1.050 
     : cladding.roofType === 'T18' ? 1.064 
     : 1.050; // sandwich roof module = 1050mm
-  const roofProfileType: 'T18' | 'T35' | 'ROOF_SANDWICH' = 
-    cladding.roofType === 'T35' ? 'T35' 
+  const roofProfileType: 'T18' | 'T35' | 'T35_ROOF' | 'ROOF_SANDWICH' = 
+    cladding.roofType === 'T35' ? 'T35_ROOF' 
     : cladding.roofType === 'T18' ? 'T18' 
     : 'ROOF_SANDWICH';
   const numRoofSheets = Math.ceil(roofWidth / roofModuleWidth);
