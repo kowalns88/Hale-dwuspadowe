@@ -180,6 +180,19 @@ function ColumnHead({
       >
         <boxGeometry args={[plateSize, plateSize, 0.015]} />
       </mesh>
+      {/* Connection plate at stub start (column junction) */}
+      <mesh
+        material={plateMaterial}
+        position={[
+          x,
+          wallHeight - trussHeight / 2,
+          side === 'left' ? columnFlangeOffset : span - columnFlangeOffset,
+        ]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[plateSize, trussHeight + chordSize, 0.020]} />
+      </mesh>
     </group>
   );
 }
