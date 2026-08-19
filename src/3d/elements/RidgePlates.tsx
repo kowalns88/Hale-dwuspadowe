@@ -27,7 +27,7 @@ export const RidgePlates = React.memo(function RidgePlates({
   // Convert mm to meters
   const plateW = width / 1000;
   const plateH = height / 1000;
-  const plateT = thickness / 1000;
+  const plateT = Math.max(thickness / 1000, 0.05);
 
   const positions = useMemo(() => {
     const pos: number[] = [];

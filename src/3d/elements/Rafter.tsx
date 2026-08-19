@@ -35,7 +35,7 @@ export const Rafter = React.memo(function Rafter({
   const tw = (profile.tw ?? 7) / 1000;
   const tf = (profile.tf ?? 11) / 1000;
 
-  const ridgePlateGap = 0.001; // 1mm gap for ridge plate
+  const ridgePlateGap = -0.02; // negative — rafter extends 20mm past ridge axis (overlap hidden by ridge plate)
   const effectiveHalfSpanZ = span / 2 - columnFlangeOffset - ridgePlateGap;
   const roofAngleRad = (roofAngle * Math.PI) / 180;
   const slopeLength = effectiveHalfSpanZ / Math.cos(roofAngleRad);
