@@ -12,7 +12,6 @@ interface BuildingEdgeLinesProps {
   sideWallThicknessOffset: number;
   endWallThicknessOffset: number;
   flashingColor: string; // RAL code
-  eaveOverhang: number; // meters
 }
 
 /**
@@ -21,7 +20,6 @@ interface BuildingEdgeLinesProps {
  * - Ridge cap (kalenica): flat strip along the ridge
  * - Eave trims (okap): vertical strips along both eaves
  * - Corner trims (narozniki): L-shaped vertical strips at 4 corners
- * - Gable edge trims: tilted strips along roof slope edges on gable ends
  */
 export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
   span,
@@ -33,7 +31,6 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
   sideWallThicknessOffset,
   endWallThicknessOffset,
   flashingColor,
-  eaveOverhang: _eaveOverhang,
 }: BuildingEdgeLinesProps) {
   const roofAngleRad = (roofAngle * Math.PI) / 180;
 
@@ -52,8 +49,6 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
 
   // Roof geometry
   const ridgeY = wallHeight + (span / 2) * Math.tan(roofAngleRad);
-  const ridgeTriangleHeight = ridgeY - wallHeight;
-  const roofSlopeLength = (span / 2) / Math.cos(roofAngleRad);
 
   // Shared material for all flashings
   const material = useMemo(() => {
@@ -162,46 +157,6 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
         <boxGeometry args={[0.005, wallHeight, 0.080]} />
       </mesh>
 
-      {/* ===== Gable Edge Trims (krawedzie szczytowe dachu) ===== */}
-      {/* Front gable - left slope (from eave at zMin up to ridge) */}
-      <mesh
-        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight * 0.44, span / 4]}
-        rotation={[-roofAngleRad, 0, 0]}
-        material={material}
-        castShadow
-      >
-        <boxGeometry args={[0.005, 0.080, roofSlopeLength * 0.92]} />
-      </mesh>
-
-      {/* Front gable - right slope (from eave at zMax up to ridge) */}
-      <mesh
-        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight * 0.44, span * 3 / 4]}
-        rotation={[roofAngleRad, 0, 0]}
-        material={material}
-        castShadow
-      >
-        <boxGeometry args={[0.005, 0.080, roofSlopeLength * 0.92]} />
-      </mesh>
-
-      {/* Back gable - left slope */}
-      <mesh
-        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight * 0.44, span / 4]}
-        rotation={[-roofAngleRad, 0, 0]}
-        material={material}
-        castShadow
-      >
-        <boxGeometry args={[0.005, 0.080, roofSlopeLength * 0.92]} />
-      </mesh>
-
-      {/* Back gable - right slope */}
-      <mesh
-        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight * 0.44, span * 3 / 4]}
-        rotation={[roofAngleRad, 0, 0]}
-        material={material}
-        castShadow
-      >
-        <boxGeometry args={[0.005, 0.080, roofSlopeLength * 0.92]} />
-      </mesh>
     </group>
   );
 });

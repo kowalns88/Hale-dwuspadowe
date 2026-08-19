@@ -333,7 +333,6 @@ export const HallModel = React.memo(function HallModel({ params, results, claddi
           sideWallThicknessOffset={sideWallThicknessOffset}
           endWallThicknessOffset={endWallThicknessOffset}
           flashingColor={cladding?.flashingColor ?? 'RAL 7016'}
-          eaveOverhang={(cladding?.eaveOverhang ?? 300) / 1000}
         />
       )}
 
