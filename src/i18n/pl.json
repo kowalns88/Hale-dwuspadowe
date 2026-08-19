@@ -293,7 +293,6 @@
     "columns": {
       "type": "Typ",
       "thickness": "Grubosc",
-      "module": "Modul",
       "length": "Dlugosc",
       "count": "Ilosc",
       "pcs": "szt."

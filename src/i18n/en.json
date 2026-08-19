@@ -293,7 +293,6 @@
     "columns": {
       "type": "Type",
       "thickness": "Thickness",
-      "module": "Module",
       "length": "Length",
       "count": "Quantity",
       "pcs": "pcs"

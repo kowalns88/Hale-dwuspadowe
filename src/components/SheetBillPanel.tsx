@@ -42,7 +42,6 @@ export function SheetBillPanel({ params, cladding, results, openings }: SheetBil
                 <tr className="border-b border-border">
                   <th className="text-left py-1 text-text-secondary font-normal">{t('sheetBill.columns.type')}</th>
                   <th className="text-right py-1 text-text-secondary font-normal">{t('sheetBill.columns.thickness')}</th>
-                  <th className="text-right py-1 text-text-secondary font-normal">{t('sheetBill.columns.module')}</th>
                   <th className="text-right py-1 text-text-secondary font-normal">{t('sheetBill.columns.length')}</th>
                   <th className="text-right py-1 text-text-secondary font-normal">{t('sheetBill.columns.count')}</th>
                 </tr>
@@ -54,7 +53,6 @@ export function SheetBillPanel({ params, cladding, results, openings }: SheetBil
                     <td className="py-1.5 text-right text-text-secondary">
                       {item.thickness !== null ? `${item.thickness} mm` : '-'}
                     </td>
-                    <td className="py-1.5 text-right text-text-secondary">{item.moduleWidth} mm</td>
                     <td className="py-1.5 text-right text-text-secondary">{item.length} mm</td>
                     <td className="py-1.5 text-right text-text-primary font-medium">
                       {item.count} {t('sheetBill.columns.pcs')}

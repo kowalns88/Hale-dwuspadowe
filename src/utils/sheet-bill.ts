@@ -3,7 +3,6 @@ import type { HallParameters, CladdingParameters, CalculationResults, Opening } 
 export interface SheetBillItem {
   type: string; // i18n key for the panel type
   thickness: number | null; // mm, only for sandwich panels
-  moduleWidth: number; // mm
   length: number; // mm
   count: number;
 }
@@ -222,13 +221,13 @@ export function computeSheetBill(
   let totalWallSurfaceGross = 0;
   let totalRoofSurfaceGross = 0;
 
-  function addItem(typeKey: string, thickness: number | null, moduleWidthMm: number, lengthMm: number, count: number) {
-    const key = `${typeKey}|${thickness ?? 'null'}|${moduleWidthMm}|${lengthMm}`;
+  function addItem(typeKey: string, thickness: number | null, lengthMm: number, count: number) {
+    const key = `${typeKey}|${thickness ?? 'null'}|${lengthMm}`;
     const existing = itemMap.get(key);
     if (existing) {
       existing.count += count;
     } else {
-      itemMap.set(key, { type: typeKey, thickness, moduleWidth: moduleWidthMm, length: lengthMm, count });
+      itemMap.set(key, { type: typeKey, thickness, length: lengthMm, count });
     }
   }
 
@@ -273,7 +272,7 @@ export function computeSheetBill(
           // For GROSS surface: if it's a trimmed sheet (last one), count full module width
           const grossHeight = sheetH < sideWallModuleWidth - 0.001 ? sideWallModuleWidth : sheetH;
 
-          addItem(sideWallTypeKey, sideWallThickness, Math.round(sideWallModuleWidth * 1000), Math.round(panelWidth * 1000), 1);
+          addItem(sideWallTypeKey, sideWallThickness, Math.round(panelWidth * 1000), 1);
           totalWallSurfaceGross += grossHeight * panelWidth;
         }
       } else {
@@ -284,7 +283,7 @@ export function computeSheetBill(
           // For GROSS surface: if it's a trimmed sheet, count full module width
           const grossWidth = sheetW < sideWallModuleWidth - 0.001 ? sideWallModuleWidth : sheetW;
 
-          addItem(sideWallTypeKey, sideWallThickness, Math.round(sideWallModuleWidth * 1000), Math.round(sideWallHeight * 1000), 1);
+          addItem(sideWallTypeKey, sideWallThickness, Math.round(sideWallHeight * 1000), 1);
           totalWallSurfaceGross += grossWidth * sideWallHeight;
         }
       }
@@ -338,7 +337,7 @@ export function computeSheetBill(
         for (const sheetH of sheetHeights) {
           const grossHeight = sheetH < endWallModuleWidth - 0.001 ? endWallModuleWidth : sheetH;
 
-          addItem(endWallTypeKey, endWallThickness, Math.round(endWallModuleWidth * 1000), Math.round(panelWidth * 1000), 1);
+          addItem(endWallTypeKey, endWallThickness, Math.round(panelWidth * 1000), 1);
           totalWallSurfaceGross += grossHeight * panelWidth;
         }
       } else {
@@ -348,7 +347,7 @@ export function computeSheetBill(
         for (const sheetW of sheetWidths) {
           const grossWidth = sheetW < endWallModuleWidth - 0.001 ? endWallModuleWidth : sheetW;
 
-          addItem(endWallTypeKey, endWallThickness, Math.round(endWallModuleWidth * 1000), Math.round(wallHeight * 1000), 1);
+          addItem(endWallTypeKey, endWallThickness, Math.round(wallHeight * 1000), 1);
           totalWallSurfaceGross += grossWidth * wallHeight;
         }
       }
@@ -407,7 +406,7 @@ export function computeSheetBill(
 
         // For BILL: gable panels are treated as FULL rectangular panels (moduleW x panelWidth).
         // They are the same as wall panels - just trimmed on site.
-        addItem(endWallTypeKey, endWallThickness, Math.round(endWallModuleWidth * 1000), Math.round(panelWidth * 1000), 1);
+        addItem(endWallTypeKey, endWallThickness, Math.round(panelWidth * 1000), 1);
         totalWallSurfaceGross += moduleW * panelWidth;
       }
     }
@@ -415,12 +414,11 @@ export function computeSheetBill(
 
   // ============== ROOF ==============
   // 2 slopes, each with numRoofSheets sheets
-  const roofModuleWidthMm = Math.round(roofModuleWidth * 1000);
   const roofLengthMm = Math.round(roofSlopeLengthWithOverhang * 1000);
 
   // Each slope has numRoofSheets sheets of roofModuleWidth x roofSlopeLengthWithOverhang
   // Edge sheets may be trimmed but we count full module width for gross
-  addItem(roofTypeKey, roofThickness, roofModuleWidthMm, roofLengthMm, numRoofSheets * 2);
+  addItem(roofTypeKey, roofThickness, roofLengthMm, numRoofSheets * 2);
 
   // GROSS surface: numRoofSheets * roofModuleWidth * roofSlopeLengthWithOverhang * 2 slopes
   totalRoofSurfaceGross += numRoofSheets * roofModuleWidth * roofSlopeLengthWithOverhang * 2;
