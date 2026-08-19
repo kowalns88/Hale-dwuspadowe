@@ -122,7 +122,6 @@ export const HallModel = React.memo(function HallModel({ params, results, claddi
         span={span}
         columnSpacing={columnSpacing}
         numberOfFrames={numberOfFrames}
-        columnFlangeOffset={columnFlangeOffset}
       />
 
       {/* Cap plates at the top of side columns */}

@@ -9,7 +9,6 @@ interface SideColumnsProps {
   span: number;
   columnSpacing: number;
   numberOfFrames: number;
-  columnFlangeOffset: number;
 }
 
 export const SideColumns = React.memo(function SideColumns({
