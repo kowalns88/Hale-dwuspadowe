@@ -47,7 +47,7 @@ function SceneContent(props: SceneProps) {
       <directionalLight position={[-30, 40, -20]} intensity={0.8} color="#fff0e0" />
       {/* Rim light from behind to highlight edges */}
       <directionalLight position={[0, 20, -50]} intensity={1.2} color="#e0e8ff" />
-      <hemisphereLight args={['#c0d0e0', '#506040', 0.5]} />
+      <hemisphereLight args={['#d0d8e8', '#8a8a8a', 0.5]} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
         <planeGeometry args={[200, 200]} />
