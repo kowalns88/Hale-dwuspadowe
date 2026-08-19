@@ -1608,6 +1608,11 @@ export const Cladding = React.memo(function Cladding({
           let zLeft = endColZPositionsFront[i];
           let zRight = endColZPositionsFront[i + 1];
 
+          // Calculate heights at original column positions (before corner widening)
+          // to avoid steps between adjacent panels at shared boundaries
+          const hLeft = hAtZFront(Math.max(0, Math.min(span, zRight)));
+          const hRight = hAtZFront(Math.max(0, Math.min(span, zLeft)));
+
           // Widen corner panels to cover side wall thickness
           if (i === 0) {
             zLeft = -(columnOuterFlangeOffset + 2 * sideWallThicknessOffset);
@@ -1618,12 +1623,6 @@ export const Cladding = React.memo(function Cladding({
 
           const panelWidth = (zRight - zLeft) - 0.020; // 20mm dilation
           const panelCenterZ = (zLeft + zRight) / 2;
-
-          // Calculate trapezoid heights at actual panel edges (after dilation)
-          const panelLeftEdgeZ = panelCenterZ - panelWidth / 2;
-          const panelRightEdgeZ = panelCenterZ + panelWidth / 2;
-          const hLeft = hAtZFront(Math.max(0, Math.min(span, panelRightEdgeZ)));
-          const hRight = hAtZFront(Math.max(0, Math.min(span, panelLeftEdgeZ)));
           const avgH = (hLeft + hRight) / 2;
 
           if (avgH < 0.01) continue; // skip negligible panels
@@ -1952,6 +1951,11 @@ export const Cladding = React.memo(function Cladding({
           let zLeft = endColZPositionsBack[i];
           let zRight = endColZPositionsBack[i + 1];
 
+          // Calculate heights at original column positions (before corner widening)
+          // to avoid steps between adjacent panels at shared boundaries
+          const hLeft = hAtZBack(Math.max(0, Math.min(span, zLeft)));
+          const hRight = hAtZBack(Math.max(0, Math.min(span, zRight)));
+
           // Widen corner panels to cover side wall thickness
           if (i === 0) {
             zLeft = -(columnOuterFlangeOffset + 2 * sideWallThicknessOffset);
@@ -1962,12 +1966,6 @@ export const Cladding = React.memo(function Cladding({
 
           const panelWidth = (zRight - zLeft) - 0.020; // 20mm dilation
           const panelCenterZ = (zLeft + zRight) / 2;
-
-          // Calculate trapezoid heights at actual panel edges (after dilation)
-          const panelLeftEdgeZ = panelCenterZ - panelWidth / 2;
-          const panelRightEdgeZ = panelCenterZ + panelWidth / 2;
-          const hLeft = hAtZBack(Math.max(0, Math.min(span, panelLeftEdgeZ)));
-          const hRight = hAtZBack(Math.max(0, Math.min(span, panelRightEdgeZ)));
           const avgH = (hLeft + hRight) / 2;
 
           if (avgH < 0.01) continue; // skip negligible panels
