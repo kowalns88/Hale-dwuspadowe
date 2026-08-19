@@ -27,7 +27,7 @@ export const RidgePlates = React.memo(function RidgePlates({
   // Convert mm to meters
   const plateW = width / 1000;
   const plateH = height / 1000;
-  const plateT = Math.max(thickness / 1000, 0.05);
+  const plateT = Math.max(thickness / 1000, 0.08);
 
   const positions = useMemo(() => {
     const pos: number[] = [];
@@ -43,7 +43,7 @@ export const RidgePlates = React.memo(function RidgePlates({
         <mesh
           key={i}
           material={plateMaterial}
-          position={[x, ridgeHeight, span / 2]}
+          position={[x, ridgeHeight + 0.01, span / 2]}
           castShadow
           receiveShadow
         >

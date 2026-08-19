@@ -61,7 +61,7 @@ export const EndPlates = React.memo(function EndPlates({
           castShadow
           receiveShadow
         >
-          <boxGeometry args={[plateT, plateH, plateW]} />
+          <boxGeometry args={[plateW, plateH, plateT]} />
         </mesh>
       ))}
     </group>
