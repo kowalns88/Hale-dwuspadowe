@@ -165,42 +165,42 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
       {/* ===== Gable Edge Trims (krawedzie szczytowe dachu) ===== */}
       {/* Front gable - left slope (from eave at zMin up to ridge) */}
       <mesh
-        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight / 2, span / 4]}
+        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight * 0.44, span / 4]}
         rotation={[-roofAngleRad, 0, 0]}
         material={material}
         castShadow
       >
-        <boxGeometry args={[0.005, 0.080, roofSlopeLength]} />
+        <boxGeometry args={[0.005, 0.080, roofSlopeLength * 0.92]} />
       </mesh>
 
       {/* Front gable - right slope (from eave at zMax up to ridge) */}
       <mesh
-        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight / 2, span * 3 / 4]}
+        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight * 0.44, span * 3 / 4]}
         rotation={[roofAngleRad, 0, 0]}
         material={material}
         castShadow
       >
-        <boxGeometry args={[0.005, 0.080, roofSlopeLength]} />
+        <boxGeometry args={[0.005, 0.080, roofSlopeLength * 0.92]} />
       </mesh>
 
       {/* Back gable - left slope */}
       <mesh
-        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight / 2, span / 4]}
+        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight * 0.44, span / 4]}
         rotation={[-roofAngleRad, 0, 0]}
         material={material}
         castShadow
       >
-        <boxGeometry args={[0.005, 0.080, roofSlopeLength]} />
+        <boxGeometry args={[0.005, 0.080, roofSlopeLength * 0.92]} />
       </mesh>
 
       {/* Back gable - right slope */}
       <mesh
-        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight / 2, span * 3 / 4]}
+        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight * 0.44, span * 3 / 4]}
         rotation={[roofAngleRad, 0, 0]}
         material={material}
         castShadow
       >
-        <boxGeometry args={[0.005, 0.080, roofSlopeLength]} />
+        <boxGeometry args={[0.005, 0.080, roofSlopeLength * 0.92]} />
       </mesh>
     </group>
   );
