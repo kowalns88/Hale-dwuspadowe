@@ -1651,8 +1651,8 @@ export const Cladding = React.memo(function Cladding({
             if (layerHLeft < 0.001 && layerHRight < 0.001) continue;
 
             const layerGeo = isEndWallTrapezoid
-              ? createTrapezoidMeshGeometry(panelWidth, layerHLeft, layerHRight, 'T18', 'y')
-              : createTrapezoidMeshGeometry(panelWidth, layerHLeft, layerHRight, null, 'y');
+              ? createTrapezoidMeshGeometry(panelWidth, layerHRight, layerHLeft, 'T18', 'y')
+              : createTrapezoidMeshGeometry(panelWidth, layerHRight, layerHLeft, null, 'y');
 
             const isSelected = selectedSheet?.wall === 'end_front_gable' && selectedSheet?.bayIndex === i && selectedSheet?.sheetIndex === layer;
 
@@ -1957,8 +1957,8 @@ export const Cladding = React.memo(function Cladding({
 
           // Calculate heights at original column positions (before corner widening)
           // to avoid steps between adjacent panels at shared boundaries
-          const hLeft = hAtZBack(Math.max(0, Math.min(span, zRight)));
-          const hRight = hAtZBack(Math.max(0, Math.min(span, zLeft)));
+          const hLeft = hAtZBack(Math.max(0, Math.min(span, zLeft)));
+          const hRight = hAtZBack(Math.max(0, Math.min(span, zRight)));
 
           // Widen corner panels to cover side wall thickness
           if (i === 0) {
