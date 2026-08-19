@@ -31,20 +31,20 @@ export const EaveBeams = React.memo(function EaveBeams({
 
   return (
     <group name="eave-beams">
-      {/* Eave beam on Z=0 side */}
+      {/* Eave beam on Z=0 side (offset inward to avoid column overlap) */}
       <mesh
         geometry={geometry}
         material={girtMaterial}
-        position={[0, wallHeight, 0]}
+        position={[0, wallHeight, 0.08]}
         rotation={[0, Math.PI / 2, 0]}
         castShadow
         receiveShadow
       />
-      {/* Eave beam on Z=span side */}
+      {/* Eave beam on Z=span side (offset inward to avoid column overlap) */}
       <mesh
         geometry={geometry}
         material={girtMaterial}
-        position={[0, wallHeight, span]}
+        position={[0, wallHeight, span - 0.08]}
         rotation={[0, Math.PI / 2, 0]}
         castShadow
         receiveShadow
