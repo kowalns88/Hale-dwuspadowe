@@ -31,7 +31,7 @@ export const girtMaterial = new THREE.MeshStandardMaterial({
 });
 
 export const plateMaterial = new THREE.MeshStandardMaterial({
-  color: '#505050',
+  color: '#8a8a8a',
   roughness: 0.2,
   metalness: 0.95,
 });
