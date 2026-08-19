@@ -35,8 +35,8 @@ export const Rafter = React.memo(function Rafter({
   const tw = (profile.tw ?? 7) / 1000;
   const tf = (profile.tf ?? 11) / 1000;
 
-  const ridgePlateGap = 0.005; // 5mm gap for ridge plate
-  const effectiveHalfSpanZ = span / 2 - columnFlangeOffset + 0.010 - ridgePlateGap;
+  const ridgePlateGap = 0.001; // 1mm gap for ridge plate
+  const effectiveHalfSpanZ = span / 2 - columnFlangeOffset - ridgePlateGap;
   const roofAngleRad = (roofAngle * Math.PI) / 180;
   const slopeLength = effectiveHalfSpanZ / Math.cos(roofAngleRad);
   const geometry = useIBeamGeometryAngled({ h, b, tw, tf, length: slopeLength, cutAngle: roofAngleRad });
@@ -57,7 +57,7 @@ export const Rafter = React.memo(function Rafter({
           <mesh
             geometry={geometry}
             material={rafterMaterial}
-            position={[0, 0, columnFlangeOffset - 0.010]}
+            position={[0, 0, columnFlangeOffset]}
             rotation={[-roofAngleRad, 0, 0]}
             castShadow
             receiveShadow
@@ -66,7 +66,7 @@ export const Rafter = React.memo(function Rafter({
           <mesh
             geometry={geometry}
             material={rafterMaterial}
-            position={[0, 0, span - columnFlangeOffset + 0.010]}
+            position={[0, 0, span - columnFlangeOffset]}
             rotation={[roofAngleRad, Math.PI, 0]}
             castShadow
             receiveShadow

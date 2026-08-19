@@ -10,15 +10,13 @@ interface EndPlatesProps {
   connectionPlates: ConnectionPlateResults;
   rafterType: 'ipe' | 'truss';
   columnFlangeOffset: number;
-  roofAngle: number;
 }
 
 /**
  * Renders end plates (column-to-rafter connection) at the top of each side column.
  * Only rendered when rafterType === 'ipe' (IPE rafter).
  * When truss is active, TrussColumnHead provides its own end plates.
- * Positioned at Y=wallHeight, oriented in the YZ plane (flat face visible from building side),
- * tilted by roofAngle to be perpendicular to the rafter.
+ * Positioned at Y=wallHeight, perpendicular to the Z axis (thin in X, wide in Z).
  * 2 per frame (one at Z=columnFlangeOffset, one at Z=span-columnFlangeOffset).
  */
 export const EndPlates = React.memo(function EndPlates({
@@ -29,7 +27,6 @@ export const EndPlates = React.memo(function EndPlates({
   connectionPlates,
   rafterType,
   columnFlangeOffset,
-  roofAngle,
 }: EndPlatesProps) {
   // When truss is active, do not render end plates (TrussColumnHead has its own)
   if (rafterType === 'truss') {
@@ -38,19 +35,17 @@ export const EndPlates = React.memo(function EndPlates({
 
   const { width, height, thickness } = connectionPlates.endPlate;
 
-  const roofAngleRad = (roofAngle * Math.PI) / 180;
-
   // Convert mm to meters, ensure minimum 0.3m height
   const plateW = width / 1000;
   const plateH = Math.max(height / 1000, 0.3);
   const plateT = thickness / 1000;
 
   const positions = useMemo(() => {
-    const pos: Array<{ x: number; z: number; side: 'left' | 'right' }> = [];
+    const pos: Array<{ x: number; z: number }> = [];
     for (let i = 0; i < numberOfFrames; i++) {
       const x = i * columnSpacing;
-      pos.push({ x, z: columnFlangeOffset, side: 'left' });
-      pos.push({ x, z: span - columnFlangeOffset, side: 'right' });
+      pos.push({ x, z: columnFlangeOffset });
+      pos.push({ x, z: span - columnFlangeOffset });
     }
     return pos;
   }, [numberOfFrames, columnSpacing, span, columnFlangeOffset]);
@@ -62,15 +57,11 @@ export const EndPlates = React.memo(function EndPlates({
           key={i}
           material={plateMaterial}
           position={[pos.x, wallHeight, pos.z]}
-          rotation={[
-            pos.side === 'left' ? -roofAngleRad : roofAngleRad,
-            Math.PI / 2,
-            0,
-          ]}
+          rotation={[0, 0, 0]}
           castShadow
           receiveShadow
         >
-          <boxGeometry args={[plateW, plateH, plateT]} />
+          <boxGeometry args={[plateT, plateH, plateW]} />
         </mesh>
       ))}
     </group>

@@ -228,7 +228,6 @@ export const HallModel = React.memo(function HallModel({ params, results, claddi
         connectionPlates={connectionPlates}
         rafterType={rafterProfile ? 'ipe' : 'truss'}
         columnFlangeOffset={columnFlangeOffset}
-        roofAngle={roofAngle}
       />
       <RidgePlates
         span={span}
