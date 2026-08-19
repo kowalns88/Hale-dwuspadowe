@@ -165,7 +165,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
       {/* ===== Gable Edge Trims (krawedzie szczytowe dachu) ===== */}
       {/* Front gable - left slope (from eave at zMin up to ridge) */}
       <mesh
-        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight / 2, (zMin + span / 2) / 2]}
+        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight / 2, span / 4]}
         rotation={[-roofAngleRad, 0, 0]}
         material={material}
         castShadow
@@ -175,7 +175,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
 
       {/* Front gable - right slope (from eave at zMax up to ridge) */}
       <mesh
-        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight / 2, (zMax + span / 2) / 2]}
+        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight / 2, span * 3 / 4]}
         rotation={[roofAngleRad, 0, 0]}
         material={material}
         castShadow
@@ -185,7 +185,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
 
       {/* Back gable - left slope */}
       <mesh
-        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight / 2, (zMin + span / 2) / 2]}
+        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight / 2, span / 4]}
         rotation={[-roofAngleRad, 0, 0]}
         material={material}
         castShadow
@@ -195,7 +195,7 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
 
       {/* Back gable - right slope */}
       <mesh
-        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight / 2, (zMax + span / 2) / 2]}
+        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight / 2, span * 3 / 4]}
         rotation={[roofAngleRad, 0, 0]}
         material={material}
         castShadow
