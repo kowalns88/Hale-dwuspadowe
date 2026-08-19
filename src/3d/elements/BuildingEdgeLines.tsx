@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { getRALHex } from '../../data/colors';
 
@@ -15,127 +15,13 @@ interface BuildingEdgeLinesProps {
   eaveOverhang: number; // meters
 }
 
-// Flashing dimensions (meters)
-const RIDGE_CAP_HALF_WIDTH = 0.150; // 150mm per side (300mm total cap width)
-const RIDGE_CAP_THICKNESS = 0.005; // 5mm thick
-
-const EAVE_VERTICAL_LEG = 0.150; // 150mm
-const EAVE_HORIZONTAL_LEG = 0.050; // 50mm
-const EAVE_THICKNESS = 0.002; // 2mm
-
-const CORNER_LEG = 0.080; // 80mm per leg
-const CORNER_THICKNESS = 0.002; // 2mm
-
-const GABLE_LEG_A = 0.050; // 50mm
-const GABLE_LEG_B = 0.050; // 50mm
-const GABLE_THICKNESS = 0.002; // 2mm
-
 /**
- * Creates a V-shaped cross-section shape for ridge cap flashing.
- * The V opens downward, matching the roof angle.
- */
-function createRidgeCapShape(roofAngleRad: number): THREE.Shape {
-  const shape = new THREE.Shape();
-  const halfWidth = RIDGE_CAP_HALF_WIDTH;
-  const t = RIDGE_CAP_THICKNESS;
-
-  // V-shape: two legs meeting at center, opening downward
-  // Left leg goes from center downward-left at roof angle
-  // Right leg goes from center downward-right at roof angle
-  const leftDx = -halfWidth * Math.cos(roofAngleRad);
-  const leftDy = -halfWidth * Math.sin(roofAngleRad);
-  const rightDx = halfWidth * Math.cos(roofAngleRad);
-  const rightDy = -halfWidth * Math.sin(roofAngleRad);
-
-  // Outer V (top surface)
-  shape.moveTo(0, 0); // apex
-  shape.lineTo(leftDx, leftDy); // left tip outer
-  // Offset inward by thickness (perpendicular to the leg surface)
-  const normalLeftX = Math.sin(roofAngleRad);
-  const normalLeftY = -Math.cos(roofAngleRad);
-  shape.lineTo(leftDx - normalLeftX * t, leftDy - normalLeftY * t);
-  // Inner apex
-  shape.lineTo(0, -t / Math.cos(roofAngleRad));
-  // Inner right
-  const normalRightX = -Math.sin(roofAngleRad);
-  const normalRightY = -Math.cos(roofAngleRad);
-  shape.lineTo(rightDx - normalRightX * t, rightDy - normalRightY * t);
-  // Right tip outer
-  shape.lineTo(rightDx, rightDy);
-  shape.lineTo(0, 0); // close
-
-  return shape;
-}
-
-/**
- * Creates an L-shaped cross-section shape for eave trims.
- * Vertical leg goes down, horizontal leg goes outward.
- */
-function createEaveTrimShape(): THREE.Shape {
-  const shape = new THREE.Shape();
-  const vLeg = EAVE_VERTICAL_LEG;
-  const hLeg = EAVE_HORIZONTAL_LEG;
-  const t = EAVE_THICKNESS;
-
-  // Start at top-left corner of vertical leg
-  shape.moveTo(0, 0);
-  shape.lineTo(t, 0);
-  shape.lineTo(t, -(vLeg - t));
-  shape.lineTo(hLeg, -(vLeg - t));
-  shape.lineTo(hLeg, -vLeg);
-  shape.lineTo(0, -vLeg);
-  shape.lineTo(0, 0);
-
-  return shape;
-}
-
-/**
- * Creates an L-shaped cross-section for corner trims.
- * Two equal legs at 90 degrees.
- */
-function createCornerTrimShape(): THREE.Shape {
-  const shape = new THREE.Shape();
-  const leg = CORNER_LEG;
-  const t = CORNER_THICKNESS;
-
-  // L shape: vertical leg up, horizontal leg right
-  shape.moveTo(0, 0);
-  shape.lineTo(leg, 0);
-  shape.lineTo(leg, t);
-  shape.lineTo(t, t);
-  shape.lineTo(t, leg);
-  shape.lineTo(0, leg);
-  shape.lineTo(0, 0);
-
-  return shape;
-}
-
-/**
- * Creates an L-shaped cross-section for gable edge trims.
- */
-function createGableEdgeTrimShape(): THREE.Shape {
-  const shape = new THREE.Shape();
-  const legA = GABLE_LEG_A;
-  const legB = GABLE_LEG_B;
-  const t = GABLE_THICKNESS;
-
-  shape.moveTo(0, 0);
-  shape.lineTo(legA, 0);
-  shape.lineTo(legA, t);
-  shape.lineTo(t, t);
-  shape.lineTo(t, legB);
-  shape.lineTo(0, legB);
-  shape.lineTo(0, 0);
-
-  return shape;
-}
-
-/**
- * Renders architectural sheet metal flashings (obrobki blacharskie) at building edges:
- * - Ridge cap (kalenica): V-shaped along ridge
- * - Eave trims (okap): L-shaped along both eaves
+ * Renders architectural sheet metal flashings (obrobki blacharskie) at building edges
+ * using simple BoxGeometry for correct and predictable positioning:
+ * - Ridge cap (kalenica): flat strip along the ridge
+ * - Eave trims (okap): vertical strips along both eaves
  * - Corner trims (narozniki): L-shaped vertical strips at 4 corners
- * - Gable edge trims: L-shaped along roof slope edges on gable ends
+ * - Gable edge trims: tilted strips along roof slope edges on gable ends
  */
 export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
   span,
@@ -151,16 +37,6 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
 }: BuildingEdgeLinesProps) {
   const roofAngleRad = (roofAngle * Math.PI) / 180;
 
-  // Material for all flashings
-  const material = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: getRALHex(flashingColor),
-      metalness: 0.4,
-      roughness: 0.5,
-      side: THREE.DoubleSide,
-    });
-  }, [flashingColor]);
-
   // Key coordinates
   const sideOffset = columnOuterFlangeOffset + sideWallThicknessOffset;
   const endOffset = endColumnOuterOffset + endWallThicknessOffset;
@@ -171,191 +47,162 @@ export const BuildingEdgeLines = React.memo(function BuildingEdgeLines({
   const zMin = -sideOffset;
   const zMax = span + sideOffset;
 
-  // Eave trim length covers entire building length including end wall offsets
-  const eaveTrimLength = xMax - xMin;
+  // Building total length along X
+  const buildingLength = xMax - xMin;
 
   // Roof geometry
   const ridgeY = wallHeight + (span / 2) * Math.tan(roofAngleRad);
-  const ridgeZ = span / 2;
+  const ridgeTriangleHeight = ridgeY - wallHeight;
   const roofSlopeLength = (span / 2) / Math.cos(roofAngleRad);
+  const slopeLen = roofSlopeLength + eaveOverhang;
 
-  // Ridge cap length extends the full building length
-  const ridgeCapLength = eaveTrimLength;
-
-  // ===== Ridge Cap Geometry =====
-  const ridgeCapGeometry = useMemo(() => {
-    const shape = createRidgeCapShape(roofAngleRad);
-    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-      steps: 1,
-      depth: ridgeCapLength,
-      bevelEnabled: false,
-    };
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  }, [roofAngleRad, ridgeCapLength]);
-
-  // ===== Eave Trim Geometry =====
-  const eaveTrimGeometry = useMemo(() => {
-    const shape = createEaveTrimShape();
-    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-      steps: 1,
-      depth: eaveTrimLength,
-      bevelEnabled: false,
-    };
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  }, [eaveTrimLength]);
-
-  // ===== Corner Trim Geometry =====
-  const cornerTrimGeometry = useMemo(() => {
-    const shape = createCornerTrimShape();
-    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-      steps: 1,
-      depth: wallHeight,
-      bevelEnabled: false,
-    };
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  }, [wallHeight]);
-
-  // ===== Gable Edge Trim Geometry =====
-  const gableEdgeTrimGeometry = useMemo(() => {
-    const shape = createGableEdgeTrimShape();
-    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-      steps: 1,
-      depth: roofSlopeLength + eaveOverhang,
-      bevelEnabled: false,
-    };
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  }, [roofSlopeLength, eaveOverhang]);
-
-  // Dispose geometries and material on unmount or when dependencies change
-  useEffect(() => {
-    return () => {
-      ridgeCapGeometry.dispose();
-    };
-  }, [ridgeCapGeometry]);
-
-  useEffect(() => {
-    return () => {
-      eaveTrimGeometry.dispose();
-    };
-  }, [eaveTrimGeometry]);
-
-  useEffect(() => {
-    return () => {
-      cornerTrimGeometry.dispose();
-    };
-  }, [cornerTrimGeometry]);
-
-  useEffect(() => {
-    return () => {
-      gableEdgeTrimGeometry.dispose();
-    };
-  }, [gableEdgeTrimGeometry]);
-
-  useEffect(() => {
-    return () => {
-      material.dispose();
-    };
-  }, [material]);
+  // Shared material for all flashings
+  const material = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: getRALHex(flashingColor),
+      metalness: 0.3,
+      roughness: 0.6,
+      side: THREE.DoubleSide,
+    });
+  }, [flashingColor]);
 
   return (
     <group>
       {/* ===== Ridge Cap (kalenica) ===== */}
-      {/* V-shaped flashing along the ridge, extruded along building X axis */}
+      {/* Flat strip sitting on top of the ridge */}
       <mesh
-        geometry={ridgeCapGeometry}
+        position={[hallLength / 2, ridgeY + 0.003, span / 2]}
         material={material}
-        position={[xMin, ridgeY, ridgeZ]}
-        rotation={[0, -Math.PI / 2, 0]}
         castShadow
-      />
+      >
+        <boxGeometry args={[buildingLength + 0.1, 0.005, 0.300]} />
+      </mesh>
 
       {/* ===== Eave Trims (okap) ===== */}
-      {/* Left eave (Z = zMin side) - L-shape with vertical leg going down, horizontal leg outward (-Z) */}
+      {/* Left eave (Z = zMin side) - vertical strip along building length */}
       <mesh
-        geometry={eaveTrimGeometry}
+        position={[hallLength / 2, wallHeight - 0.075, zMin - 0.003]}
         material={material}
-        position={[xMin, wallHeight, zMin]}
-        rotation={[0, -Math.PI / 2, 0]}
         castShadow
-      />
-      {/* Right eave (Z = zMax side) - mirrored, horizontal leg goes outward (+Z) */}
+      >
+        <boxGeometry args={[buildingLength + 0.1, 0.150, 0.005]} />
+      </mesh>
+      {/* Right eave (Z = zMax side) - vertical strip along building length */}
       <mesh
-        geometry={eaveTrimGeometry}
+        position={[hallLength / 2, wallHeight - 0.075, zMax + 0.003]}
         material={material}
-        position={[xMax, wallHeight, zMax]}
-        rotation={[0, Math.PI / 2, 0]}
         castShadow
-      />
+      >
+        <boxGeometry args={[buildingLength + 0.1, 0.150, 0.005]} />
+      </mesh>
 
       {/* ===== Corner Trims (narozniki) ===== */}
+      {/* Each corner has 2 boxes forming an L-shape */}
+
       {/* Front-left corner */}
       <mesh
-        geometry={cornerTrimGeometry}
+        position={[xMin, wallHeight / 2, zMin - 0.003]}
         material={material}
-        position={[xMin, 0, zMin]}
-        rotation={[Math.PI / 2, 0, 0]}
         castShadow
-      />
+      >
+        <boxGeometry args={[0.080, wallHeight, 0.005]} />
+      </mesh>
+      <mesh
+        position={[xMin - 0.003, wallHeight / 2, zMin]}
+        material={material}
+        castShadow
+      >
+        <boxGeometry args={[0.005, wallHeight, 0.080]} />
+      </mesh>
+
       {/* Front-right corner */}
       <mesh
-        geometry={cornerTrimGeometry}
+        position={[xMin, wallHeight / 2, zMax + 0.003]}
         material={material}
-        position={[xMin, 0, zMax]}
-        rotation={[Math.PI / 2, 0, Math.PI / 2]}
         castShadow
-      />
+      >
+        <boxGeometry args={[0.080, wallHeight, 0.005]} />
+      </mesh>
+      <mesh
+        position={[xMin - 0.003, wallHeight / 2, zMax]}
+        material={material}
+        castShadow
+      >
+        <boxGeometry args={[0.005, wallHeight, 0.080]} />
+      </mesh>
+
       {/* Back-left corner */}
       <mesh
-        geometry={cornerTrimGeometry}
+        position={[xMax, wallHeight / 2, zMin - 0.003]}
         material={material}
-        position={[xMax, 0, zMin]}
-        rotation={[Math.PI / 2, 0, -Math.PI / 2]}
         castShadow
-      />
+      >
+        <boxGeometry args={[0.080, wallHeight, 0.005]} />
+      </mesh>
+      <mesh
+        position={[xMax + 0.003, wallHeight / 2, zMin]}
+        material={material}
+        castShadow
+      >
+        <boxGeometry args={[0.005, wallHeight, 0.080]} />
+      </mesh>
+
       {/* Back-right corner */}
       <mesh
-        geometry={cornerTrimGeometry}
+        position={[xMax, wallHeight / 2, zMax + 0.003]}
         material={material}
-        position={[xMax, 0, zMax]}
-        rotation={[Math.PI / 2, 0, Math.PI]}
         castShadow
-      />
+      >
+        <boxGeometry args={[0.080, wallHeight, 0.005]} />
+      </mesh>
+      <mesh
+        position={[xMax + 0.003, wallHeight / 2, zMax]}
+        material={material}
+        castShadow
+      >
+        <boxGeometry args={[0.005, wallHeight, 0.080]} />
+      </mesh>
 
-      {/* ===== Gable Edge Trims (krawedzie szczytowe) ===== */}
+      {/* ===== Gable Edge Trims (krawedzie szczytowe dachu) ===== */}
       {/* Front gable - left slope (from eave at zMin up to ridge) */}
       <mesh
-        geometry={gableEdgeTrimGeometry}
+        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight / 2, zMin + span / 4]}
+        rotation={[-roofAngleRad, 0, 0]}
         material={material}
-        position={[xMin, wallHeight, zMin - eaveOverhang * Math.cos(roofAngleRad)]}
-        rotation={[roofAngleRad, 0, 0]}
         castShadow
-      />
+      >
+        <boxGeometry args={[0.005, 0.080, slopeLen]} />
+      </mesh>
+
       {/* Front gable - right slope (from eave at zMax up to ridge) */}
       <mesh
-        geometry={gableEdgeTrimGeometry}
+        position={[xMin - 0.003, wallHeight + ridgeTriangleHeight / 2, zMax - span / 4]}
+        rotation={[roofAngleRad, 0, 0]}
         material={material}
-        position={[xMin, wallHeight, zMax + eaveOverhang * Math.cos(roofAngleRad)]}
-        rotation={[-roofAngleRad, 0, 0]}
-        scale={[1, -1, 1]}
         castShadow
-      />
+      >
+        <boxGeometry args={[0.005, 0.080, slopeLen]} />
+      </mesh>
+
       {/* Back gable - left slope */}
       <mesh
-        geometry={gableEdgeTrimGeometry}
+        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight / 2, zMin + span / 4]}
+        rotation={[-roofAngleRad, 0, 0]}
         material={material}
-        position={[xMax, wallHeight, zMin - eaveOverhang * Math.cos(roofAngleRad)]}
-        rotation={[roofAngleRad, 0, 0]}
         castShadow
-      />
+      >
+        <boxGeometry args={[0.005, 0.080, slopeLen]} />
+      </mesh>
+
       {/* Back gable - right slope */}
       <mesh
-        geometry={gableEdgeTrimGeometry}
+        position={[xMax + 0.003, wallHeight + ridgeTriangleHeight / 2, zMax - span / 4]}
+        rotation={[roofAngleRad, 0, 0]}
         material={material}
-        position={[xMax, wallHeight, zMax + eaveOverhang * Math.cos(roofAngleRad)]}
-        rotation={[-roofAngleRad, 0, 0]}
-        scale={[1, -1, 1]}
         castShadow
-      />
+      >
+        <boxGeometry args={[0.005, 0.080, slopeLen]} />
+      </mesh>
     </group>
   );
 });
