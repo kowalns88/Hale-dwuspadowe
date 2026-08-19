@@ -1610,8 +1610,8 @@ export const Cladding = React.memo(function Cladding({
 
           // Calculate heights at original column positions (before corner widening)
           // to avoid steps between adjacent panels at shared boundaries
-          const hLeft = hAtZFront(Math.max(0, Math.min(span, zRight)));
-          const hRight = hAtZFront(Math.max(0, Math.min(span, zLeft)));
+          const hLeft = hAtZFront(Math.max(0, Math.min(span, zLeft)));
+          const hRight = hAtZFront(Math.max(0, Math.min(span, zRight)));
 
           // Widen corner panels to cover side wall thickness
           if (i === 0) {
