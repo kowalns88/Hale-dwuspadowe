@@ -105,7 +105,7 @@ function createMicrolinedGeometry(
  */
 function getTrapezoidalParams(type: 'T18' | 'T35' | 'ROOF_SANDWICH') {
   if (type === 'T35') {
-    return { height: 0.018, plateau: 0.040, valley: 0.130, period: 0.213 };
+    return { height: 0.010, plateau: 0.040, valley: 0.130, period: 0.213 };
   }
   if (type === 'ROOF_SANDWICH') {
     return { height: 0.042, plateau: 0.040, valley: 0.260, period: 0.350 };

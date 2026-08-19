@@ -28,7 +28,7 @@ function SceneContent(props: SceneProps) {
 
   return (
     <>
-      <ambientLight intensity={0.3} />
+      <ambientLight intensity={0.5} />
       <directionalLight
         position={[40, 60, 30]}
         intensity={2.0}
