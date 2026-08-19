@@ -50,7 +50,7 @@ function SceneContent(props: SceneProps) {
       <hemisphereLight args={['#d0d8e8', '#8a8a8a', 0.5]} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
+        <planeGeometry args={[200, 200, 64, 64]} />
         <meshStandardMaterial color="#a8b8a0" roughness={0.95} metalness={0} />
       </mesh>
 
@@ -67,7 +67,7 @@ function SceneContent(props: SceneProps) {
       />
 
       <EffectComposer multisampling={8}>
-        <N8AO aoRadius={0.5} intensity={3.0} distanceFalloff={0.5} />
+        <N8AO aoRadius={0.3} intensity={1.5} distanceFalloff={0.5} />
         <ToneMapping mode={ToneMappingMode.AGX} />
         <Vignette offset={0.3} darkness={0.4} />
       </EffectComposer>
