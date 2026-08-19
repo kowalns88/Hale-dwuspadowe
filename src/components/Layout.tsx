@@ -14,7 +14,7 @@ export const DEFAULT_CLADDING: CladdingParameters = {
   roofType: 'T35',
   sideWallColor: 'RAL 9002',
   endWallColor: 'RAL 9002',
-  roofColor: 'RAL 7035',
+  roofColor: 'RAL 7016',
   flashingColor: 'RAL 7016',
   panelOrientation: 'horizontal',
   panelWidth: 1000,
