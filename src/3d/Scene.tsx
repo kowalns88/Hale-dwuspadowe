@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
+import { EffectComposer, N8AO, ToneMapping } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
 import { HallModel } from './HallModel'
 import type { HallParameters, CalculationResults, CladdingParameters, Opening, OpeningType, SkylightParameters, SelectedSheet } from '../types'
@@ -51,7 +51,7 @@ function SceneContent(props: SceneProps) {
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
         <planeGeometry args={[200, 200, 64, 64]} />
-        <meshStandardMaterial color="#a8b8a0" roughness={0.95} metalness={0} />
+        <meshStandardMaterial color="#3a3a4a" roughness={0.7} metalness={0} />
       </mesh>
 
       <HallModel params={params} results={results} selectedSheet={_selectedSheet} onSelectSheet={_onSelectSheet} {...rest} />
@@ -69,7 +69,6 @@ function SceneContent(props: SceneProps) {
       <EffectComposer multisampling={8}>
         <N8AO aoRadius={0.3} intensity={1.5} distanceFalloff={0.5} />
         <ToneMapping mode={ToneMappingMode.AGX} />
-        <Vignette offset={0.3} darkness={0.4} />
       </EffectComposer>
     </>
   )
@@ -85,7 +84,7 @@ export function Scene(props: SceneProps) {
       className="w-full h-full"
       onPointerMissed={() => props.onSelectSheet?.(null)}
     >
-      <color attach="background" args={['#dce8f0']} />
+      <color attach="background" args={['#1e1e2e']} />
       <Suspense fallback={null}>
         <SceneContent {...props} />
       </Suspense>
