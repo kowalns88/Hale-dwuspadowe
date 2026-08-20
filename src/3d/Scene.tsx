@@ -78,7 +78,7 @@ export function Scene(props: SceneProps) {
   return (
     <Canvas
       shadows
-      camera={{ position: [30, 12, 30], fov: 40 }}
+      camera={{ position: [40, 20, 40], fov: 45 }}
       gl={{ powerPreference: 'high-performance', antialias: true }}
       dpr={[1, 2]}
       className="w-full h-full"
