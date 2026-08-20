@@ -732,8 +732,11 @@ export const Cladding = React.memo(function Cladding({
     return cladding.panelWidth;
   }, [isSideWallTrapezoid, sideWallProfileType, cladding.panelWidth]);
 
-  // Gap width between sheets (2mm)
-  const sheetGapWidth = 0.002;
+  // Whether side wall sheets are laid out horizontally (strips along Y)
+  const isHorizontalLayout = cladding.panelOrientation === 'horizontal';
+
+  // Gap width between sheets (2mm) - only in horizontal layout; vertical panels have no gap
+  const sheetGapWidth = isHorizontalLayout ? 0.002 : 0;
 
   /**
    * Compute individual sheet sizes for a given dimension (width or height).
@@ -773,9 +776,6 @@ export const Cladding = React.memo(function Cladding({
 
   // Keep backward-compatible alias
   const computeSheetWidths = computeSheetSizes;
-
-  // Whether side wall sheets are laid out horizontally (strips along Y)
-  const isHorizontalLayout = cladding.panelOrientation === 'horizontal';
 
   // End wall sheet module width
   const endWallSheetModuleWidth = useMemo(() => {
@@ -1016,8 +1016,8 @@ export const Cladding = React.memo(function Cladding({
                   />
                 );
               })}
-              {/* Gap lines between sheets */}
-              {sheetPositions.slice(0, -1).map((sheet, gapIdx) => (
+              {/* Gap lines between sheets (only when gap > 0) */}
+              {sheetGapWidth > 0 && sheetPositions.slice(0, -1).map((sheet, gapIdx) => (
                 <mesh
                   key={`side-left-${bayIndex}-gap-${gapIdx}`}
                   position={[sheet.x + sheet.width / 2 + sheetGapWidth / 2, sideWallHeight / 2, zPosition]}
@@ -1090,8 +1090,8 @@ export const Cladding = React.memo(function Cladding({
                       />
                     );
                   })}
-                  {/* Gap lines between sheets in this segment */}
-                  {sheetPositions.slice(0, -1).map((sheet, gapIdx) => (
+                  {/* Gap lines between sheets in this segment (only when gap > 0) */}
+                  {sheetGapWidth > 0 && sheetPositions.slice(0, -1).map((sheet, gapIdx) => (
                     <mesh
                       key={`side-left-${bayIndex}-seg-${segIdx}-gap-${gapIdx}`}
                       position={[sheet.x + sheet.width / 2 + sheetGapWidth / 2, segCenterY, zPosition]}
@@ -1266,8 +1266,8 @@ export const Cladding = React.memo(function Cladding({
                   />
                 );
               })}
-              {/* Gap lines between sheets */}
-              {sheetPositions.slice(0, -1).map((sheet, gapIdx) => (
+              {/* Gap lines between sheets (only when gap > 0) */}
+              {sheetGapWidth > 0 && sheetPositions.slice(0, -1).map((sheet, gapIdx) => (
                 <mesh
                   key={`side-right-${bayIndex}-gap-${gapIdx}`}
                   position={[sheet.x + sheet.width / 2 + sheetGapWidth / 2, sideWallHeight / 2, zPosition]}
@@ -1341,8 +1341,8 @@ export const Cladding = React.memo(function Cladding({
                       />
                     );
                   })}
-                  {/* Gap lines between sheets in this segment */}
-                  {sheetPositions.slice(0, -1).map((sheet, gapIdx) => (
+                  {/* Gap lines between sheets in this segment (only when gap > 0) */}
+                  {sheetGapWidth > 0 && sheetPositions.slice(0, -1).map((sheet, gapIdx) => (
                     <mesh
                       key={`side-right-${bayIndex}-seg-${segIdx}-gap-${gapIdx}`}
                       position={[sheet.x + sheet.width / 2 + sheetGapWidth / 2, segCenterY, zPosition]}
